@@ -21,7 +21,7 @@ const Sidebar = () => {
   const { theme, toggleTheme } = useThemeStore();
 
   const navItems = [
-    { to: "/", label: "Trang chủ", icon: Home },
+    { to: "/dashboard", label: "Bảng điều khiển", icon: Home },
     { to: "/create-post", label: "Đăng bài", icon: PlusSquare },
     { to: "/progress", label: "Tiến trình", icon: List },
     { to: "/create-site", label: "Tạo website mới", icon: Globe },
@@ -34,15 +34,15 @@ const Sidebar = () => {
       {/* Header nhỏ có nút menu (mobile) */}
       <div className="md:hidden sticky top-0 left-0 w-full z-40 bg-card/80 backdrop-blur-xl border-b border-border flex items-center justify-between px-4 py-3 shadow-sm">
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg overflow-hidden shadow-md shadow-amber-500/25">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg overflow-hidden bg-white shadow-md shadow-orange-500/25 ring-1 ring-orange-200/60">
             <img
-              src="/src/access/z7589296664177_1e231dbdceef2feb2f6f02a5de781cfa.jpg"
-              alt="Logo"
-              className="w-full h-full object-cover"
+              src="/logo-3.png"
+              alt="Logo POSTA"
+              className="w-6 h-6 object-contain"
             />
           </div>
-          <span className="font-bold text-lg bg-gradient-to-r from-amber-600 to-yellow-600 dark:from-amber-400 dark:to-yellow-500 bg-clip-text text-transparent">
-            Auto Post
+          <span className="font-extrabold text-lg bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+            POSTA
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -78,15 +78,15 @@ const Sidebar = () => {
         {/* Sidebar Header */}
         <div className="p-5 border-b border-border flex justify-between items-center bg-gradient-to-r from-amber-50/50 to-yellow-50/50 dark:from-amber-950/30 dark:to-yellow-950/30">
           <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-amber-500/25">
+            <div className="flex items-center justify-center w-9 h-9 rounded-xl overflow-hidden bg-white shadow-lg shadow-orange-500/25 ring-1 ring-orange-200/60">
               <img
-                src="/src/access/z7589296664177_1e231dbdceef2feb2f6f02a5de781cfa.jpg"
-                alt="Logo"
-                className="w-full h-full object-cover"
+                src="/logo-3.png"
+                alt="Logo POSTA"
+                className="w-7 h-7 object-contain"
               />
             </div>
-            <span className="font-bold text-lg bg-gradient-to-r from-amber-600 to-yellow-600 dark:from-amber-400 dark:to-yellow-500 bg-clip-text text-transparent">
-              Auto Post
+            <span className="font-extrabold text-lg bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+              POSTA
             </span>
           </div>
           <button
@@ -125,7 +125,7 @@ const Sidebar = () => {
         {/* Footer */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border bg-secondary/50">
           <p className="text-xs text-center text-muted-foreground">
-            © 2024 Auto Post System
+            © 2024 POSTA System
           </p>
         </div>
       </div>

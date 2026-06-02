@@ -13,6 +13,12 @@ export interface AuthState {
   user: User | null;
   isLoading: boolean;
   login: (username: string, password: string) => Promise<response | undefined>;
+  loginWithGoogle: (credential: string) => Promise<response | undefined>;
+  register: (
+    name: string,
+    email: string,
+    password: string
+  ) => Promise<response | undefined>;
   logout: () => void;
   setLoading: (loading: boolean) => void;
   updateUser: (userData: Partial<User>) => void;

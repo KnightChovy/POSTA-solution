@@ -16,9 +16,10 @@ app.use(cookieParser());
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-app.use(express.json());
+// Tăng giới hạn để nhận avatar dạng base64 (mặc định 100kb là quá nhỏ)
+app.use(bodyParser.urlencoded({ extended: false, limit: '5mb' }));
+app.use(bodyParser.json({ limit: '5mb' }));
+app.use(express.json({ limit: '5mb' }));
 app.use(cors({
   origin: process.env.CLIENT_URL,
   methods: "GET, POST, PUT, DELETE, PATCH, OPTIONS",
