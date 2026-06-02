@@ -28,6 +28,7 @@
     "cors": "^2.8.5",
     "filepond": "^4.32.9",
     "multer": "^2.0.2",
+    "nodemailer": "^8.0.10",
     "openai": "^6.9.0",
     "p-queue": "^8.1.1"
   }

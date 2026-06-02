@@ -4,30 +4,30 @@
 
 @layer base {
   :root {
-    /* Ultra Luxury Light Theme - Champagne & Gold */
-    --background: 45 25% 98%;
-    --foreground: 20 20% 8%;
+    /* POSTA — Light Mode (cát kem ấm, cam chủ đạo) */
+    --background: 30 35% 95%; /* #FAF5F2 */
+    --foreground: 20 40% 12%; /* #2A170F sô-cô-la */
 
     --card: 0 0% 100%;
-    --card-foreground: 20 20% 8%;
+    --card-foreground: 20 40% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 20 20% 8%;
+    --popover-foreground: 20 40% 12%;
 
-    --primary: 38 90% 50%;
-    --primary-foreground: 20 20% 8%;
+    --primary: 24 100% 50%; /* #FF6B00 cam chủ đạo */
+    --primary-foreground: 30 35% 98%;
 
-    --secondary: 45 30% 95%;
-    --secondary-foreground: 20 20% 8%;
+    --secondary: 24 60% 29%; /* #773E1E nâu đỏ đất */
+    --secondary-foreground: 30 35% 98%;
 
-    --muted: 45 20% 92%;
-    --muted-foreground: 20 10% 40%;
+    --muted: 30 20% 88%;
+    --muted-foreground: 20 15% 45%;
 
-    --accent: 38 60% 94%;
-    --accent-foreground: 38 90% 35%;
+    --accent: 24 100% 95%; /* #FFF1E6 cam nhạt hover */
+    --accent-foreground: 24 100% 45%;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
 
     --success: 152 69% 31%;
     --success-foreground: 0 0% 100%;
@@ -35,60 +35,54 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 40 25% 88%;
-    --input: 40 25% 88%;
-    --ring: 38 90% 50%;
+    --border: 24 15% 85%; /* viền cát nhạt */
+    --input: 24 15% 85%;
+    --ring: 24 100% 50%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    --chart-1: 38 90% 50%;
+    --chart-1: 24 100% 50%;
     --chart-2: 152 69% 31%;
-    --chart-3: 38 92% 50%;
+    --chart-3: 38 92% 55%;
     --chart-4: 0 72% 51%;
-    --chart-5: 262 83% 58%;
-
-    /* Luxury gradient colors */
-    --luxury-gold: 38 90% 50%;
-    --luxury-bronze: 30 55% 38%;
-    --luxury-cream: 45 25% 98%;
-    --luxury-champagne: 42 50% 90%;
+    --chart-5: 24 60% 29%;
   }
 
   .dark {
-    /* Ultra Luxury Dark Theme - Obsidian & Gold */
-    --background: 225 25% 6%;
-    --foreground: 45 25% 95%;
+    /* POSTA — Dark Mode (hổ phách cháy) */
+    --background: 12 80% 5%; /* #170501 đỏ đen hổ phách */
+    --foreground: 30 30% 94%; /* #F5ECE6 cát kem sáng */
 
-    --card: 225 20% 10%;
-    --card-foreground: 45 25% 95%;
+    --card: 12 40% 9%; /* #240F06 nâu gạch ấm */
+    --card-foreground: 30 30% 94%;
 
-    --popover: 225 20% 10%;
-    --popover-foreground: 45 25% 95%;
+    --popover: 12 40% 9%;
+    --popover-foreground: 30 30% 94%;
 
-    --primary: 42 95% 55%;
-    --primary-foreground: 225 25% 6%;
+    --primary: 24 100% 50%; /* #FF6B00 */
+    --primary-foreground: 30 35% 98%;
 
-    --secondary: 225 18% 15%;
-    --secondary-foreground: 45 25% 95%;
+    --secondary: 24 60% 29%; /* #773E1E */
+    --secondary-foreground: 30 35% 98%;
 
-    --muted: 225 15% 18%;
-    --muted-foreground: 225 15% 55%;
+    --muted: 12 25% 15%;
+    --muted-foreground: 30 15% 70%;
 
-    --accent: 225 18% 18%;
-    --accent-foreground: 42 95% 60%;
+    --accent: 12 35% 16%;
+    --accent-foreground: 24 100% 60%;
 
-    --destructive: 0 63% 45%;
-    --destructive-foreground: 45 25% 95%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 225 18% 18%;
-    --input: 225 18% 18%;
-    --ring: 42 95% 55%;
+    --success: 152 50% 45%;
+    --success-foreground: 0 0% 100%;
 
-    /* Luxury gradient colors - Dark mode */
-    --luxury-gold: 42 95% 55%;
-    --luxury-bronze: 38 65% 50%;
-    --luxury-cream: 225 20% 10%;
-    --luxury-champagne: 225 18% 15%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 12 25% 16%;
+    --input: 12 25% 16%;
+    --ring: 24 100% 50%;
   }
 }
 
@@ -103,6 +97,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
@@ -205,6 +200,11 @@
     @apply border-b border-border hover:bg-primary/5 transition-colors duration-150;
   }
 
+  /* Entrance animation (tôn trọng prefers-reduced-motion ở base bên dưới) */
+  .animate-rise {
+    animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
   /* Stat cards */
   .stat-card {
     @apply relative overflow-hidden rounded-xl bg-card border border-border p-6
@@ -230,5 +230,30 @@
 
   .stat-card-info::before {
     @apply bg-gradient-to-b from-blue-500 to-blue-600;
+  }
+}
+
+@layer utilities {
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Tắt mọi chuyển động cho người dùng yêu cầu giảm hiệu ứng (a11y) */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }

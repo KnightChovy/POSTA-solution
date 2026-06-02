@@ -10,6 +10,7 @@ import {
   Sparkles,
   Moon,
   Sun,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -19,8 +20,17 @@ import { useThemeStore } from "@/store/themeStore";
 const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, logout } = useAuthStore();
+  const { isAuthenticated, logout, user } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
+
+  const initials =
+    (user as any)?.name
+      ?.trim()
+      .split(/\s+/)
+      .slice(-2)
+      .map((w: string) => w[0])
+      .join("")
+      .toUpperCase() || "U";
 
   const handleLogout = () => {
     logout();
@@ -29,10 +39,10 @@ const Navigation = () => {
 
   const navItems = [
     {
-      name: "Trang chủ",
-      path: "/",
+      name: "Bảng điều khiển",
+      path: "/dashboard",
       icon: <LayoutDashboard className="h-4 w-4" />,
-      action: () => navigate("/"),
+      action: () => navigate("/dashboard"),
     },
     {
       name: "Thêm website vệ tinh",
@@ -54,22 +64,35 @@ const Navigation = () => {
     },
   ];
 
+  if ((user as any)?.isAdmin) {
+    navItems.push({
+      name: "Quản trị",
+      path: "/admin",
+      icon: <ShieldCheck className="h-4 w-4" />,
+      action: () => navigate("/admin"),
+    });
+  }
+
   return (
     <header className="hidden sm:block sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border shadow-sm">
       <div className="flex items-center justify-between h-16 px-6 md:px-8 max-w-[1600px] mx-auto">
-        {/* Logo */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-amber-500/25">
+        {/* Logo POSTA — bấm để về trang chủ */}
+        <button
+          onClick={() => navigate("/")}
+          className="flex items-center gap-3 cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+          aria-label="Về trang chủ POSTA"
+        >
+          <div className="flex items-center justify-center w-9 h-9 rounded-xl overflow-hidden bg-white shadow-lg shadow-orange-500/25 ring-1 ring-orange-200/60">
             <img
-              src="/src/access/z7589296664177_1e231dbdceef2feb2f6f02a5de781cfa.jpg"
-              alt="Logo"
-              className="w-full h-full object-cover"
+              src="/logo-3.png"
+              alt="Logo POSTA"
+              className="w-7 h-7 object-contain"
             />
           </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-amber-600 to-yellow-600 dark:from-amber-400 dark:to-yellow-500 bg-clip-text text-transparent">
-            Auto Post
+          <span className="text-xl font-extrabold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+            POSTA
           </span>
-        </div>
+        </button>
 
         {/* Nav Items */}
         <nav className="hidden md:flex items-center gap-1">
@@ -114,20 +137,35 @@ const Navigation = () => {
           {!isAuthenticated ? (
             <Button
               onClick={() => navigate("/login")}
-              className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-md shadow-amber-500/25 transition-all duration-200"
+              className="flex items-center gap-2 cursor-pointer"
             >
               <LogIn className="h-4 w-4" />
               Đăng nhập
             </Button>
           ) : (
-            <Button
-              variant="outline"
-              onClick={handleLogout}
-              className="flex items-center gap-2 border-border text-muted-foreground hover:bg-red-50 dark:hover:bg-red-950/50 hover:text-red-600 hover:border-red-200 dark:hover:border-red-800 transition-all duration-200"
-            >
-              <LogOut className="h-4 w-4" />
-              Đăng xuất
-            </Button>
+            <>
+              {/* Hồ sơ cá nhân */}
+              <button
+                onClick={() => navigate("/profile")}
+                className="flex items-center gap-2 rounded-lg px-2 py-1.5 cursor-pointer transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label="Hồ sơ cá nhân"
+              >
+                <span className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary ring-1 ring-primary/20">
+                  {initials}
+                </span>
+                <span className="hidden lg:block max-w-[120px] truncate text-sm font-medium text-foreground">
+                  {(user as any)?.name || "Tài khoản"}
+                </span>
+              </button>
+              <Button
+                variant="outline"
+                onClick={handleLogout}
+                className="flex items-center gap-2 cursor-pointer text-muted-foreground hover:text-destructive"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Đăng xuất</span>
+              </Button>
+            </>
           )}
         </div>
       </div>

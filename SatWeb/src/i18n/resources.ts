@@ -1,0 +1,126 @@
+// File song ngữ Tiếng Việt / English cho POSTA.
+// Thêm khoá mới ở CẢ vi và en để giữ đồng bộ.
+
+export const resources = {
+  vi: {
+    translation: {
+      common: {
+        login: "Đăng nhập",
+        dashboard: "Bảng điều khiển",
+        profile: "Hồ sơ",
+        start: "Bắt đầu",
+        language: "Ngôn ngữ",
+        changeTheme: "Đổi giao diện",
+      },
+      landing: {
+        heroTitle: "Đăng bài không giới hạn lên hàng trăm",
+        heroAccent: "website vệ tinh",
+        heroPrice: "Giá từ 199.000đ/tháng. Huỷ bất kỳ lúc nào.",
+        heroSub: "Sẵn sàng tăng tốc SEO? Nhập email để tạo hoặc đăng nhập tài khoản của bạn.",
+        emailPlaceholder: "Địa chỉ email",
+        trendingTitle: "Chủ đề thịnh hành",
+        trendingBadge: "Thịnh hành",
+        ctaTopic: "Bắt đầu với chủ đề này",
+        reasonsTitle: "Thêm lý do để chọn POSTA",
+        faqTitle: "Câu hỏi thường gặp",
+        statsPosts: "Bài viết",
+        statsSites: "Website",
+        footerContact: "Bạn có câu hỏi? Liên hệ với chúng tôi.",
+        footerBrand: "POSTA Việt Nam",
+        copyright: "© 2024 POSTA System. Nền tảng đăng bài vệ tinh tự động cho SEO/PBN.",
+        trending: {
+          realestate: { title: "Bất động sản", desc: "Chủ đề được đăng nhiều nhất tuần qua. Phù hợp các chiến dịch bán dự án, ký gửi và môi giới." },
+          beauty: { title: "Mỹ phẩm & Làm đẹp", desc: "Nội dung review, hướng dẫn và quảng bá sản phẩm làm đẹp đang tăng trưởng mạnh." },
+          travel: { title: "Du lịch", desc: "Bài giới thiệu điểm đến, combo tour và khách sạn — tỉ lệ tương tác cao." },
+          finance: { title: "Tài chính", desc: "Chủ đề vay vốn, đầu tư, bảo hiểm — cạnh tranh cao, hợp triển khai PBN." },
+          health: { title: "Sức khỏe", desc: "Thực phẩm chức năng, phòng khám, dịch vụ y tế — nhu cầu nội dung lớn." },
+          tech: { title: "Công nghệ", desc: "Đánh giá thiết bị, phần mềm, thủ thuật — khán giả trẻ, lan toả nhanh." },
+          food: { title: "Ẩm thực", desc: "Công thức, quán ngon, đánh giá nhà hàng — nội dung dễ viral." },
+          education: { title: "Giáo dục", desc: "Khoá học, du học, luyện thi — chủ đề bền vững quanh năm." },
+        },
+        reasons: {
+          bulk: { title: "Đăng bài hàng loạt", desc: "Soạn một lần, đăng đồng loạt lên mọi website vệ tinh chỉ với một thao tác." },
+          ai: { title: "Viết lại bằng AI", desc: "Mỗi site nhận nội dung được AI viết lại, tránh trùng lặp và an toàn SEO." },
+          manage: { title: "Quản lý tập trung", desc: "Thêm, sửa và theo dõi tất cả website WordPress ở một nơi duy nhất." },
+          track: { title: "Theo dõi & báo cáo", desc: "Biết ngay bài nào đăng thành công, bài nào lỗi để xử lý kịp thời." },
+        },
+        faqs: [
+          { q: "POSTA là gì?", a: "POSTA là nền tảng tự động đăng bài lên nhiều website vệ tinh WordPress phục vụ SEO/PBN. Bạn soạn nội dung một lần, POSTA phân phối tới toàn bộ site đang hoạt động." },
+          { q: "POSTA hoạt động như thế nào?", a: "Bạn soạn bài và tải ảnh lên, POSTA viết lại nội dung bằng AI cho từng site để tránh trùng lặp, rồi đăng tự động qua WordPress REST API và báo cáo tiến trình." },
+          { q: "Tôi phải trả bao nhiêu tiền?", a: "Có 3 gói: Cơ bản 199.000đ, Trung bình 499.000đ và Nâng cao 999.000đ mỗi tháng. Bạn có thể nâng cấp hoặc huỷ bất kỳ lúc nào." },
+          { q: "Nội dung có bị trùng lặp không?", a: "Không. Mỗi website vệ tinh nhận một phiên bản nội dung được AI viết lại, giúp an toàn với thuật toán SEO và tránh phạt trùng lặp." },
+          { q: "Tôi có thể quản lý bao nhiêu website?", a: "Tuỳ gói: từ 5 website (Cơ bản) đến không giới hạn (Nâng cao). Tất cả được quản lý tập trung trong một bảng điều khiển." },
+          { q: "Làm sao để bắt đầu?", a: "Chỉ cần đăng ký tài khoản, kết nối website WordPress của bạn bằng Application Password, và bắt đầu soạn bài. Chúng tôi có hướng dẫn chi tiết từng bước." },
+        ],
+        footerLinks: [
+          ["Câu hỏi thường gặp", "Trung tâm trợ giúp", "Tài khoản", "Hướng dẫn"],
+          ["Quan hệ đối tác", "Việc làm", "Cách hoạt động", "Điều khoản sử dụng"],
+          ["Quyền riêng tư", "Tuỳ chọn cookie", "Thông tin doanh nghiệp", "Liên hệ"],
+          ["Tính năng", "Bảng giá", "Đánh giá", "Bảo mật"],
+        ],
+      },
+    },
+  },
+
+  en: {
+    translation: {
+      common: {
+        login: "Sign in",
+        dashboard: "Dashboard",
+        profile: "Profile",
+        start: "Get started",
+        language: "Language",
+        changeTheme: "Toggle theme",
+      },
+      landing: {
+        heroTitle: "Publish unlimited posts to hundreds of",
+        heroAccent: "satellite websites",
+        heroPrice: "From 199,000đ/month. Cancel anytime.",
+        heroSub: "Ready to boost your SEO? Enter your email to create or sign in to your account.",
+        emailPlaceholder: "Email address",
+        trendingTitle: "Trending topics",
+        trendingBadge: "Trending",
+        ctaTopic: "Start with this topic",
+        reasonsTitle: "More reasons to choose POSTA",
+        faqTitle: "Frequently asked questions",
+        statsPosts: "Posts",
+        statsSites: "Websites",
+        footerContact: "Questions? Contact us.",
+        footerBrand: "POSTA Vietnam",
+        copyright: "© 2024 POSTA System. Automated satellite publishing platform for SEO/PBN.",
+        trending: {
+          realestate: { title: "Real estate", desc: "The most published topic this week. Great for project sales, listings and brokerage campaigns." },
+          beauty: { title: "Beauty & Cosmetics", desc: "Reviews, tutorials and product promotions in beauty are growing fast." },
+          travel: { title: "Travel", desc: "Destination guides, tour combos and hotels — high engagement rate." },
+          finance: { title: "Finance", desc: "Loans, investing and insurance — highly competitive, ideal for PBN." },
+          health: { title: "Health", desc: "Supplements, clinics and medical services — strong content demand." },
+          tech: { title: "Technology", desc: "Device reviews, software and tips — young audience, fast spread." },
+          food: { title: "Food", desc: "Recipes, eateries and restaurant reviews — easily viral content." },
+          education: { title: "Education", desc: "Courses, study abroad and exam prep — evergreen all year round." },
+        },
+        reasons: {
+          bulk: { title: "Bulk publishing", desc: "Write once, publish to every satellite website in a single action." },
+          ai: { title: "AI rewriting", desc: "Each site gets AI-rewritten content to avoid duplication and stay SEO-safe." },
+          manage: { title: "Centralized management", desc: "Add, edit and track all your WordPress websites in one place." },
+          track: { title: "Tracking & reports", desc: "Know instantly which posts succeeded or failed to act in time." },
+        },
+        faqs: [
+          { q: "What is POSTA?", a: "POSTA is a platform that automatically publishes posts to multiple WordPress satellite websites for SEO/PBN. Write once, and POSTA distributes to all active sites." },
+          { q: "How does POSTA work?", a: "You write a post and upload images, POSTA rewrites the content with AI for each site to avoid duplication, then publishes automatically via the WordPress REST API and reports progress." },
+          { q: "How much does it cost?", a: "Three plans: Basic 199,000đ, Standard 499,000đ and Advanced 999,000đ per month. You can upgrade or cancel anytime." },
+          { q: "Will the content be duplicated?", a: "No. Each satellite website receives an AI-rewritten version of the content, keeping it SEO-safe and avoiding duplicate-content penalties." },
+          { q: "How many websites can I manage?", a: "Depends on the plan: from 5 websites (Basic) to unlimited (Advanced). All managed centrally in one dashboard." },
+          { q: "How do I get started?", a: "Just register an account, connect your WordPress website with an Application Password, and start writing. We provide a detailed step-by-step guide." },
+        ],
+        footerLinks: [
+          ["FAQ", "Help center", "Account", "Guide"],
+          ["Partnerships", "Careers", "How it works", "Terms of use"],
+          ["Privacy", "Cookie preferences", "Company info", "Contact"],
+          ["Features", "Pricing", "Reviews", "Security"],
+        ],
+      },
+    },
+  },
+} as const;
+
+export type AppLanguage = keyof typeof resources;
