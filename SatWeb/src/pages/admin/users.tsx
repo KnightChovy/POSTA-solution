@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, UserPlus, Trash2, Loader2, ArrowLeft, ShieldCheck } from "lucide-react";
+import { Search, UserPlus, Ban, Loader2, ShieldCheck, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,18 +13,11 @@ import {
 import useAdminStore from "@/store/adminStore";
 import { useAuthStore } from "@/store/authStore";
 
-const PLAN_OPTIONS = [
-  { value: "none", label: "Chưa có gói" },
-  { value: "basic", label: "Cơ bản" },
-  { value: "pro", label: "Trung bình" },
-  { value: "enterprise", label: "Nâng cao" },
-];
-
 const selectCls =
   "h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer";
 
 export default function AdminUsers() {
-  const { users, loading, getUsers, createUser, updateUser, deleteUser } = useAdminStore();
+  const { users, loading, adminPlans, getUsers, getAdminPlans, createUser, updateUser, deleteUser } = useAdminStore();
   const currentEmail = (useAuthStore((s) => s.user) as any)?.email;
 
   const [search, setSearch] = useState("");
@@ -34,13 +27,18 @@ export default function AdminUsers() {
     name: "",
     email: "",
     password: "",
-    plan: "none",
+    plan: "freemium",
     isAdmin: false,
   });
 
+  // Danh sách gói động để chọn khi gán cho user.
+  const PLAN_OPTIONS = adminPlans.map((p) => ({ value: p.key, label: p.name }));
+  const planName = (key: string) => adminPlans.find((p) => p.key === key)?.name || key || "—";
+
   useEffect(() => {
     getUsers();
-  }, [getUsers]);
+    getAdminPlans();
+  }, [getUsers, getAdminPlans]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,20 +57,12 @@ export default function AdminUsers() {
   };
 
   const handleDelete = (id: string, name: string) => {
-    if (window.confirm(`Xoá người dùng "${name}"?`)) deleteUser(id);
+    if (window.confirm(`Tạm khoá tài khoản "${name}"? Tài khoản sẽ không đăng nhập được cho tới khi mở khoá lại.`)) deleteUser(id);
   };
 
   return (
     <div className="min-h-screen bg-background">
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
-        <Link
-          to="/admin"
-          className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
-        >
-          <ArrowLeft className="size-4" />
-          Bảng điều khiển
-        </Link>
-
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">Quản lý người dùng</h1>
@@ -121,23 +111,19 @@ export default function AdminUsers() {
                   return (
                     <tr key={u.id} className="border-b border-border/50 hover:bg-secondary/20">
                       <td className="px-4 py-3">
-                        <p className="font-medium text-foreground">
-                          {u.name} {isSelf && <span className="text-xs text-muted-foreground">(bạn)</span>}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{u.email}</p>
+                        <Link to={`/admin/users/${u.id}`} className="group inline-flex flex-col cursor-pointer">
+                          <span className="font-medium text-foreground group-hover:text-primary group-hover:underline">
+                            {u.name} {isSelf && <span className="text-xs text-muted-foreground">(bạn)</span>}
+                          </span>
+                          <span className="text-xs text-muted-foreground">{u.email}</span>
+                        </Link>
                       </td>
                       <td className="px-4 py-3">
-                        <select
-                          value={u.plan}
-                          onChange={(e) => updateUser(u.id, { plan: e.target.value })}
-                          className={selectCls}
-                        >
-                          {PLAN_OPTIONS.map((p) => (
-                            <option key={p.value} value={p.value}>
-                              {p.label}
-                            </option>
-                          ))}
-                        </select>
+                        {u.isAdmin ? (
+                          <span className="text-sm text-muted-foreground">—</span>
+                        ) : (
+                          <span className="text-sm text-foreground">{planName(u.plan)}</span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <button
@@ -163,22 +149,32 @@ export default function AdminUsers() {
                               ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                               : "bg-destructive/10 text-destructive"
                           } ${isSelf ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
-                          title={isSelf ? "Không thể khoá chính mình" : "Đổi trạng thái"}
+                          title={isSelf ? "Không thể khoá chính mình" : "Bấm để khoá/mở khoá"}
                         >
                           {u.isActive ? "Hoạt động" : "Đã khoá"}
                         </button>
                       </td>
-                      <td className="px-4 py-3 text-right">
-                        <button
-                          disabled={isSelf}
-                          onClick={() => handleDelete(u.id, u.name)}
-                          className={`rounded-md p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive ${
-                            isSelf ? "cursor-not-allowed opacity-40" : "cursor-pointer"
-                          }`}
-                          aria-label="Xoá người dùng"
-                        >
-                          <Trash2 className="size-4" />
-                        </button>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            disabled={isSelf || !u.isActive}
+                            onClick={() => handleDelete(u.id, u.name)}
+                            className={`rounded-md p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive ${
+                              isSelf || !u.isActive ? "cursor-not-allowed opacity-40" : "cursor-pointer"
+                            }`}
+                            title={!u.isActive ? "Tài khoản đã bị khoá" : "Tạm khoá tài khoản"}
+                            aria-label="Tạm khoá tài khoản"
+                          >
+                            <Ban className="size-4" />
+                          </button>
+                          <Link
+                            to={`/admin/users/${u.id}`}
+                            className="rounded-md p-2 text-muted-foreground hover:bg-primary/10 hover:text-primary cursor-pointer"
+                            title="Xem chi tiết"
+                          >
+                            <ChevronRight className="size-4" />
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -227,21 +223,26 @@ export default function AdminUsers() {
               />
             </div>
             <div className="flex items-center justify-between gap-4">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="cu-plan">Gói</Label>
-                <select
-                  id="cu-plan"
-                  value={newUser.plan}
-                  onChange={(e) => setNewUser((u) => ({ ...u, plan: e.target.value }))}
-                  className={selectCls}
-                >
-                  {PLAN_OPTIONS.map((p) => (
-                    <option key={p.value} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Admin không dùng gói → ẩn ô chọn gói khi bật quyền quản trị */}
+              {!newUser.isAdmin ? (
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="cu-plan">Gói</Label>
+                  <select
+                    id="cu-plan"
+                    value={newUser.plan}
+                    onChange={(e) => setNewUser((u) => ({ ...u, plan: e.target.value }))}
+                    className={selectCls}
+                  >
+                    {PLAN_OPTIONS.map((p) => (
+                      <option key={p.value} value={p.value}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">Tài khoản admin không dùng gói dịch vụ.</p>
+              )}
               <label className="flex cursor-pointer items-center gap-2 pt-6 text-sm text-foreground">
                 <input
                   type="checkbox"

@@ -10,6 +10,7 @@ const { convertErrorSatelliteToUrls } = require("../../utils/satelliteUtils");
 const { createVariations } = require("../../utils/createVariations");
 const { saveImageToServer } = require("./imageController");
 const { replaceImagesInContent } = require("../../utils/postUtils");
+const { incrementAiUsage } = require("../../utils/subscription");
 const getAllPosts = async (req, res) => {
   try {
     const allPosts = await Post.find();
@@ -87,9 +88,15 @@ const createNewPost = async (req, res) => {
         postedSatellite: [],
         errorSatellite: [],
         successfulRate: 0,
+        owner: req.user?.id, // gắn chủ sở hữu để đếm quota bài đăng theo user
       },
       { new: true }
     );
+
+    // Đếm 1 lần dùng AI cho mỗi bài tạo (pipeline viết lại nội dung bằng AI).
+    if (req.user?.id) {
+      try { await incrementAiUsage(req.user.id); } catch (e) { console.error('[post] incrementAiUsage:', e.message); }
+    }
 
     const { successfulSatelliteUrls, progress } = await pushToSatelliteWebsite(
       newPost,
