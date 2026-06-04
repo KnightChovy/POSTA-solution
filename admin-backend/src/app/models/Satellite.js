@@ -8,6 +8,7 @@ const Satellite = new Schema({
   password: { type: String, required: true },
   category: { type: [Schema.Types.ObjectId], ref: 'category', required: false },
   status: { type: String, enum: ['ACTIVE', 'INACTIVE'], default: 'ACTIVE' },
+  owner: { type: Schema.Types.ObjectId, ref: 'user' }, // chủ sở hữu (đếm quota website theo user)
 });
 
 module.exports = mongoose.model('satellite', Satellite);

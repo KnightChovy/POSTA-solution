@@ -223,7 +223,27 @@ APP_USERNAME=...                                 # Tài khoản admin duy nhất
 APP_PASSWORD=...                                 # Mật khẩu admin
 OPENAI_API_KEY=...                               # Khóa OpenAI cho createVariations.js
 SERVER_URL=...                                   # Base URL công khai của server (build URL ảnh tuyệt đối khi repost)
+
+# Gửi email xác thực / reset mật khẩu (mailer.js đọc cả SMTP_* lẫn EMAIL_*)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=...                                # tài khoản SMTP (Gmail App Password)
+SMTP_PASSWORD=...
+EMAIL_FROM=...                                   # địa chỉ hiển thị người gửi
+
+# SePay — thanh toán chuyển khoản (paymentController.js). Thiếu thì luồng mua gói vẫn
+# tạo giao dịch pending nhưng không có QR; dùng dev-confirm để test ở môi trường dev.
+SEPAY_WEBHOOK_API_KEY=...                         # khớp header "Authorization: Apikey ..." của webhook
+SEPAY_ACCOUNT_NUMBER=...                          # số tài khoản nhận tiền (dựng link QR VietQR)
+SEPAY_BANK_CODE=...                               # mã ngân hàng cho VietQR
 ```
+
+### Hệ thống gói dịch vụ (Plan) — đọc trước khi đụng tới gói/doanh thu
+- **`Plan` model** (`models/Plan.js`) là nguồn chuẩn của gói; `key` (slug) liên kết với `User.plan` và `Transaction.plan` (không dùng ObjectId để giữ tương thích). Seed 4 gói mặc định qua `config/db/seedPlans.js` khi collection rỗng.
+- **`utils/plans.js`** đọc giá/nhãn động từ DB (`getPlanMap`/`planPrice`/`planLabel` — **async**, có cache 30s; gọi `invalidatePlanCache()` sau khi admin sửa gói).
+- **Khóa gói:** gói đã có `Transaction` tham chiếu `key` thì `PATCH /api/admin/plans/:id` trả **409** — chỉ được `clone`.
+- **Mua gói** (`planController.purchasePlan`) tạo `Transaction` **pending** + mã `reference`; kích hoạt khi `paymentController` nhận webhook SePay (hoặc `dev-confirm` ở dev). Gói giá 0 kích hoạt ngay. Doanh thu (`getStats`) chỉ tính `status:'paid'`.
+- **Usage** (count & display): `Satellite.owner`/`Post.owner` set khi tạo; `User.usage.aiCount` tăng mỗi bài; `GET /api/plans/me/subscription` trả hạn mức + mức dùng.
 
 ⚠️ **Bảo mật:** hiện `.env` chứa secret thật nằm trong cây làm việc — không echo giá trị ra code/log/commit. Nếu `.env` đã lỡ vào git history, nên rotate khóa và bổ sung `.gitignore`.
 

@@ -44,7 +44,8 @@ const addSatellite = async (req, res) => {
       url,
       username,
       password,
-      category: category || []
+      category: category || [],
+      owner: req.user?.id, // gắn chủ sở hữu để đếm quota website theo user
     });
 
     newSatellite

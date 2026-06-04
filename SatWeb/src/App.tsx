@@ -19,6 +19,11 @@ import ResetPasswordPage from "./pages/reset-password";
 import ProfilePage from "./pages/profile";
 import AdminDashboard from "./pages/admin/dashboard";
 import AdminUsers from "./pages/admin/users";
+import AdminUserDetail from "./pages/admin/user-detail";
+import AdminPlans from "./pages/admin/plans";
+import AdminRevenue from "./pages/admin/revenue";
+import AdminLayout from "./components/layout/AdminLayout";
+import PricingPage from "./pages/pricing";
 import { ToastContainer } from "react-toastify";
 import Navigation from "./components/Navigation";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -53,7 +58,9 @@ function App() {
     "/verify-email",
     "/reset-password",
   ];
-  const showNav = !noNavRoutes.includes(location.pathname);
+  // Ẩn thanh điều hướng của user trên trang xác thực, landing và toàn bộ khu admin.
+  const showNav =
+    !noNavRoutes.includes(location.pathname) && !location.pathname.startsWith("/admin");
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -104,12 +111,14 @@ function App() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         {/* Landing page công khai — không cần đăng nhập */}
         <Route path="/" element={<Landing />} />
-        {/* Khu vực quản trị — chỉ admin */}
+        {/* Khu vực quản trị — chỉ admin, dùng layout sidebar riêng */}
         <Route
           path="/admin"
           element={
             <AdminRoute>
-              <AdminDashboard />
+              <AdminLayout>
+                <AdminDashboard />
+              </AdminLayout>
             </AdminRoute>
           }
         />
@@ -117,7 +126,39 @@ function App() {
           path="/admin/users"
           element={
             <AdminRoute>
-              <AdminUsers />
+              <AdminLayout>
+                <AdminUsers />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/users/:id"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminUserDetail />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/revenue"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminRevenue />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/plans"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminPlans />
+              </AdminLayout>
             </AdminRoute>
           }
         />
@@ -135,6 +176,14 @@ function App() {
           element={
             <ProtectedRoute>
               <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pricing"
+          element={
+            <ProtectedRoute>
+              <PricingPage />
             </ProtectedRoute>
           }
         />

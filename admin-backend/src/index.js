@@ -8,9 +8,11 @@ const cors = require("cors");
 
 require('dotenv').config();
 const mongoDB = require('./config/db/mongoDB')
+const { seedPlans } = require('./config/db/seedPlans')
 const app = express();
 
-mongoDB.connect()
+// Kết nối DB xong thì seed gói dịch vụ mặc định (chỉ chạy khi collection rỗng).
+mongoDB.connect().then(() => seedPlans())
 
 app.use(cookieParser());
 

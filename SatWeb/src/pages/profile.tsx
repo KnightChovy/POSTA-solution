@@ -23,6 +23,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import useProfileStore, { UpdateProfileInput } from "@/store/profileStore";
 import { useAuthStore } from "@/store/authStore";
+import usePlanStore from "@/store/planStore";
+import { usageText, usagePercent } from "@/lib/planFormat";
+import { Link } from "react-router-dom";
 import {
   changePasswordService,
   getSessionsService,
@@ -39,6 +42,51 @@ interface SessionItem {
 }
 
 const MAX_AVATAR_MB = 2;
+
+// Thẻ "Gói hiện tại" — tự tải subscription, hiển thị hạn mức + thanh quota.
+function PlanCard() {
+  const { subscription, getSubscription } = usePlanStore();
+
+  useEffect(() => {
+    getSubscription();
+  }, [getSubscription]);
+
+  if (!subscription) return null;
+  const { plan, usage } = subscription;
+  const rows = [
+    { label: "Website", ...usage.websites },
+    { label: "Lần dùng AI", ...usage.ai },
+    { label: "Bài đăng", ...usage.posts },
+  ];
+
+  return (
+    <section className="rounded-xl border border-primary/15 bg-card p-6 shadow-sm">
+      <div className="mb-5 flex items-center justify-between border-b border-border pb-3">
+        <h2 className="text-base font-bold text-foreground">Gói hiện tại</h2>
+        <Link
+          to="/pricing"
+          className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground cursor-pointer hover:opacity-90"
+        >
+          Nâng cấp
+        </Link>
+      </div>
+      <p className="mb-4 text-lg font-bold text-primary">{plan.name}</p>
+      <div className="grid gap-4 sm:grid-cols-3">
+        {rows.map((r) => (
+          <div key={r.label}>
+            <div className="mb-1 flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">{r.label}</span>
+              <span className="font-semibold text-foreground">{usageText(r.used, r.limit)}</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+              <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${usagePercent(r.used, r.limit)}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 function initialsOf(name: string) {
   return (
@@ -274,6 +322,9 @@ export default function ProfilePage() {
 
             {/* Cột form */}
             <div className="flex flex-col gap-6 lg:col-span-2">
+              {/* Gói dịch vụ */}
+              <PlanCard />
+
               {/* Thông tin cá nhân */}
               <section className="rounded-xl border border-primary/15 bg-card p-6 shadow-sm">
                 <h2 className="mb-5 border-b border-border pb-3 text-base font-bold text-foreground">
