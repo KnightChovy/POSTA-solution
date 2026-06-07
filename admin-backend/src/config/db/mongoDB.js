@@ -7,6 +7,7 @@ async function connect() {
     console.log('MongoURI:', process.env.MONGO_URI)
   } catch (error) {
     console.log('Connect failed!!!');
+    console.error(error.message);
   }
 }
 

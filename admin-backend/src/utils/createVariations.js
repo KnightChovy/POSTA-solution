@@ -1,8 +1,36 @@
 const axios = require('axios');
+const OpenAI = require('openai');
 require("dotenv").config();
 
 const API_URL = 'https://api.openai.com/v1/chat/completions';
 const API_KEY = process.env.OPENAI_API_KEY;
+
+// --- AI config for the campaign generation pipeline (provider-agnostic) ---
+// DeepSeek, OpenAI and most providers expose an OpenAI-compatible chat API,
+// so we reuse the already-installed `openai` SDK and just swap the base URL.
+const AI_API_KEY = process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY;
+const AI_BASE_URL = process.env.AI_BASE_URL || 'https://api.deepseek.com';
+const AI_MODEL = process.env.AI_MODEL || 'deepseek-chat';
+const AI_TIMEOUT_MS = Number(process.env.AI_TIMEOUT_MS || 60000);
+
+let _aiClient;
+const getAiClient = () => {
+  if (!AI_API_KEY) {
+    const err = new Error(
+      'Missing AI API key (set DEEPSEEK_API_KEY or OPENAI_API_KEY)'
+    );
+    err.code = 'AI_CONFIG_MISSING';
+    throw err;
+  }
+  if (!_aiClient) {
+    _aiClient = new OpenAI({
+      apiKey: AI_API_KEY,
+      baseURL: AI_BASE_URL,
+      timeout: AI_TIMEOUT_MS,
+    });
+  }
+  return _aiClient;
+};
 
 
 const createVariations = async (inputContent) => {
@@ -60,4 +88,130 @@ const createVariations = async (inputContent) => {
   }
 };
 
-module.exports = { createVariations };
+/**
+ * Strip Markdown code fences (```json ... ```) the model may wrap JSON in,
+ * and trim to the outermost {...} block to make JSON.parse robust.
+ */
+const extractJson = (raw) => {
+  let text = String(raw).trim();
+  text = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  const first = text.indexOf("{");
+  const last = text.lastIndexOf("}");
+  if (first !== -1 && last !== -1 && last > first) {
+    text = text.slice(first, last + 1);
+  }
+  return text;
+};
+
+/**
+ * Build a strict prompt instructing the model to return JSON-only content,
+ * with one variation per requested platform.
+ */
+const buildCampaignPrompt = (input) => {
+  const { campaignName, language, property, media = [], targets = [], tone, cta } = input;
+
+  const platforms = [...new Set(targets.map((t) => t.platform))];
+  const mediaUrls = media.map((m) => m.url);
+
+  const system = [
+    "You are an expert real-estate marketing copywriter.",
+    "You ALWAYS reply with a single valid JSON object and nothing else.",
+    "Do not include Markdown, code fences, or explanations.",
+  ].join(" ");
+
+  const user = `
+Write marketing content for the following real-estate campaign and return it as JSON ONLY.
+
+Language: ${language}
+Tone: ${tone}
+Campaign name: ${campaignName}
+Call to action (use/refine this): ${cta || "(none provided)"}
+
+Property:
+${JSON.stringify(property, null, 2)}
+
+Available image URLs (use them in imageUrls, do not invent new ones):
+${JSON.stringify(mediaUrls, null, 2)}
+
+Create one tailored variation for EACH of these platforms: ${JSON.stringify(platforms)}.
+Adapt length, style and hashtags to each platform while keeping the same core facts.
+
+Return JSON that EXACTLY matches this shape:
+{
+  "masterContent": {
+    "title": "string",
+    "summary": "string",
+    "body": "string",
+    "hashtags": ["string"],
+    "cta": "string"
+  },
+  "variations": [
+    {
+      "platform": "string (one of: ${platforms.join(", ")})",
+      "title": "string",
+      "body": "string",
+      "hashtags": ["string"],
+      "cta": "string",
+      "imageUrls": ["string"]
+    }
+  ]
+}
+
+Rules:
+- Output JSON only. No prose, no code fences.
+- "variations" must contain exactly one item per requested platform.
+- Use only the provided image URLs in "imageUrls".
+- Write all human-readable text in language "${language}".
+`.trim();
+
+  return { system, user };
+};
+
+/**
+ * Generate master marketing content + per-platform variations from a validated
+ * campaign input. Returns the parsed (but not yet schema-validated) AI object;
+ * the caller is expected to validate it with validateAiOutput().
+ *
+ * Throws errors tagged with a `code` so the controller can map them to the
+ * right HTTP status:
+ *   AI_CONFIG_MISSING | AI_REQUEST_FAILED | AI_EMPTY | AI_INVALID_JSON
+ */
+const generateCampaignContent = async (input) => {
+  const client = getAiClient();
+  const { system, user } = buildCampaignPrompt(input);
+
+  let completion;
+  try {
+    completion = await client.chat.completions.create({
+      model: AI_MODEL,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.8,
+    });
+  } catch (error) {
+    // Covers network errors, timeouts (APIConnectionTimeoutError) and API errors.
+    const err = new Error(`AI request failed: ${error.message}`);
+    err.code = "AI_REQUEST_FAILED";
+    throw err;
+  }
+
+  const raw = completion?.choices?.[0]?.message?.content;
+  if (!raw) {
+    const err = new Error("AI returned an empty response");
+    err.code = "AI_EMPTY";
+    throw err;
+  }
+
+  try {
+    return JSON.parse(extractJson(raw));
+  } catch (error) {
+    const err = new Error("AI returned invalid JSON");
+    err.code = "AI_INVALID_JSON";
+    throw err;
+  }
+};
+
+module.exports = { createVariations, generateCampaignContent };

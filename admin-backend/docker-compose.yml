@@ -1,0 +1,15 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: posta-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - posta-mongo-data:/data/db
+
+volumes:
+  posta-mongo-data:
+    name: posta-mongo-data
+    external: true
+
