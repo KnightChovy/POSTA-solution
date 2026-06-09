@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Globe, Bot, FileText, Loader2, ArrowLeft } from "lucide-react";
+import { Globe, Bot, FileText, Loader2, ArrowLeft } from "lucide-react";
 import usePlanStore, { PaymentInfo, Plan } from "@/store/planStore";
 import { formatVND, limitText, usagePercent, usageText } from "@/lib/planFormat";
 import { cn } from "@/lib/utils";
@@ -24,10 +24,9 @@ const QuotaBar = ({ label, icon: Icon, used, limit }: { label: string; icon: any
 
 const PricingPage = () => {
   const navigate = useNavigate();
-  const { plans, subscription, getPlans, getSubscription, purchasePlan, devConfirm } = usePlanStore();
+  const { plans, subscription, getPlans, getSubscription, purchasePlan } = usePlanStore();
   const [payment, setPayment] = useState<PaymentInfo | null>(null);
   const [buying, setBuying] = useState<string | null>(null);
-  const [confirming, setConfirming] = useState(false);
   const pollRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -36,6 +35,8 @@ const PricingPage = () => {
   }, [getPlans, getSubscription]);
 
   const currentKey = subscription?.plan?.key;
+  // Giá gói hiện tại để so sánh: chỉ cho NÂNG CẤP (gói đắt hơn), khoá các gói thấp hơn/bằng.
+  const currentPrice = subscription?.plan?.price ?? 0;
 
   // Trong lúc mở dialog thanh toán, poll subscription để bắt webhook SePay kích hoạt.
   useEffect(() => {
@@ -54,7 +55,8 @@ const PricingPage = () => {
   }, [payment, getSubscription]);
 
   const handleBuy = async (plan: Plan) => {
-    if (plan.key === currentKey) return;
+    // Chỉ cho nâng cấp lên gói cao hơn — chặn gói hiện tại & gói thấp hơn/bằng.
+    if (plan.key === currentKey || plan.price <= currentPrice) return;
     setBuying(plan.key);
     const result = await purchasePlan(plan.key);
     setBuying(null);
@@ -64,14 +66,6 @@ const PricingPage = () => {
       return;
     }
     if (result.payment) setPayment(result.payment);
-  };
-
-  const handleDevConfirm = async () => {
-    if (!payment) return;
-    setConfirming(true);
-    const ok = await devConfirm(payment.reference);
-    setConfirming(false);
-    if (ok) setPayment(null);
   };
 
   const usage = subscription?.usage;
@@ -116,12 +110,15 @@ const PricingPage = () => {
       <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {plans.map((p) => {
           const isCurrent = p.key === currentKey;
+          const isUpgrade = !isCurrent && p.price > currentPrice; // gói cao hơn → cho nâng cấp
+          const isLower = !isCurrent && p.price <= currentPrice; // gói thấp hơn/bằng → khoá
           return (
             <div
               key={p.key}
               className={cn(
-                "flex flex-col rounded-2xl border bg-card p-6 shadow-sm",
-                isCurrent ? "border-primary ring-2 ring-primary/30" : "border-primary/15"
+                "flex flex-col rounded-2xl border bg-card p-6 shadow-sm transition-opacity",
+                isCurrent ? "border-primary ring-2 ring-primary/30" : "border-primary/15",
+                isLower && "opacity-60"
               )}
             >
               <h3 className="text-lg font-bold text-foreground">{p.name}</h3>
@@ -146,12 +143,13 @@ const PricingPage = () => {
               </ul>
               <Button
                 onClick={() => handleBuy(p)}
-                disabled={isCurrent || buying === p.key}
-                variant={isCurrent ? "outline" : "default"}
+                disabled={isCurrent || isLower || buying === p.key}
+                variant={isUpgrade ? "default" : "outline"}
                 className="mt-6 w-full cursor-pointer"
+                title={isLower ? "Không thể hạ xuống gói thấp hơn" : undefined}
               >
                 {buying === p.key && <Loader2 className="size-4 animate-spin" />}
-                {isCurrent ? "Gói hiện tại" : p.price > 0 ? "Mua gói" : "Dùng miễn phí"}
+                {isCurrent ? "Gói hiện tại" : isLower ? "Gói thấp hơn" : "Nâng cấp"}
               </Button>
             </div>
           );
@@ -188,14 +186,6 @@ const PricingPage = () => {
                 <Loader2 className="size-3.5 animate-spin" />
                 Đang chờ xác nhận thanh toán tự động...
               </p>
-
-              {/* Chỉ hiện ở môi trường dev để test không cần chuyển khoản thật */}
-              {import.meta.env.DEV && (
-                <Button onClick={handleDevConfirm} disabled={confirming} variant="outline" className="w-full cursor-pointer">
-                  {confirming && <Loader2 className="size-4 animate-spin" />}
-                  <Check className="size-4" /> Tôi đã chuyển khoản (giả lập)
-                </Button>
-              )}
             </div>
           )}
         </DialogContent>
