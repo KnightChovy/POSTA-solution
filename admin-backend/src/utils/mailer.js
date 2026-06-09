@@ -29,8 +29,15 @@ function createTransporter() {
 }
 
 // URL của frontend để dựng link trong email (đổi qua env khi deploy).
+// FE_URL ưu tiên; nếu không có, CLIENT_URL có thể là DANH SÁCH nhiều origin
+// (ngăn cách dấu phẩy) → chọn origin https (production) thay vì localhost.
 function getFrontendUrl() {
-  return process.env.FE_URL || process.env.CLIENT_URL || 'http://localhost:5173';
+  if (process.env.FE_URL) return process.env.FE_URL.trim().replace(/\/$/, '');
+  const origins = (process.env.CLIENT_URL || '')
+    .split(',')
+    .map((o) => o.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+  return origins.find((o) => o.startsWith('https://')) || origins[0] || 'http://localhost:5173';
 }
 
 // Khung email chung mang nhận diện POSTA.

@@ -22,26 +22,11 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(bodyParser.urlencoded({ extended: false, limit: '5mb' }));
 app.use(bodyParser.json({ limit: '5mb' }));
 app.use(express.json({ limit: '5mb' }));
-// Cho phép NHIỀU origin (dev + production). Khai báo trong CLIENT_URL, ngăn cách bằng dấu phẩy.
-// Vd: CLIENT_URL=http://localhost:5173,https://posta-solution.vercel.app
-const allowedOrigins = (process.env.CLIENT_URL || "")
-  .split(",")
-  .map((o) => o.trim().replace(/\/$/, "")) // bỏ "/" cuối để so khớp ổn định
-  .filter(Boolean);
-
-// Vercel tạo URL preview riêng cho mỗi lần deploy (vd posta-solution-abc123.vercel.app).
-// Cho qua mọi subdomain *.vercel.app để khỏi phải thêm tay từng URL preview.
-const isVercelOrigin = (origin) => /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
-
+// Mở CORS cho MỌI origin (theo yêu cầu). Auth dùng token ở header (không cookie
+// cross-site) nên an toàn. Dùng origin:true để echo lại origin request — hoạt động
+// cùng credentials:true (khác origin:"*" bị trình duyệt chặn khi có credentials).
 app.use(cors({
-  origin: function (origin, callback) {
-    // Không có origin = request server-to-server (webhook SePay, Postman) → cho qua.
-    const clean = origin ? origin.replace(/\/$/, "") : origin;
-    if (!origin || allowedOrigins.includes(clean) || isVercelOrigin(clean)) {
-      return callback(null, true);
-    }
-    return callback(new Error(`CORS: origin không được phép - ${origin}`));
-  },
+  origin: true,
   methods: "GET, POST, PUT, DELETE, PATCH, OPTIONS",
   credentials: true,
 }));
