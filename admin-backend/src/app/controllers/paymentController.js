@@ -39,7 +39,11 @@ const sepayWebhook = async (req, res) => {
       return res.json({ success: true, skipped: 'số tiền chưa đủ' });
     }
 
-    await activatePlanByTransaction(tx);
+    // Lưu vết giao dịch SePay để đối soát (id + số tiền thực nhận).
+    tx.providerTxId = String(req.body.id || '');
+    tx.paidAmount = transferAmount != null ? Number(transferAmount) : tx.amount;
+
+    await activatePlanByTransaction(tx); // hàm này tự set status='paid' + save tx
     return res.json({ success: true, message: 'Đã kích hoạt gói' });
   } catch (error) {
     console.error('[payment] sepayWebhook error:', error);
