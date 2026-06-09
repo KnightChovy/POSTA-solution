@@ -6,22 +6,21 @@ const image = require("./image");
 const post = require("./post");
 const plan = require("./plan");
 const payment = require("./payment");
+const social = require("./social");
 const authenticateJWT = require("../middleware/AuthenticateJWT");
 
 function routes(app) {
   // Public: đăng nhập / đăng ký / xác thực / refresh token
   app.use("/api/auth", auth);
-  app.use("/api/satellite", satellite);
-  app.use("/api/category", category);
-  app.use('/api/auth/login', login)
-  app.use("/api/image", image);
-  app.use("/api/post", post);
-  app.use("/api/social", social);
+
   // Gói dịch vụ: GET công khai, mua/subscription tự gắn JWT bên trong
   app.use("/api/plans", plan);
 
   // Thanh toán SePay: webhook + dev-confirm (public, tự xác thực)
   app.use("/api/payment", payment);
+
+  // AI paraphrase cho social — n8n gọi từ ngoài, không qua JWT
+  app.use("/api/social", social);
 
   // Khu vực quản trị (tự kiểm tra admin bên trong)
   app.use("/api/admin", admin);
