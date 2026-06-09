@@ -7,6 +7,7 @@ const post = require("./post");
 const plan = require("./plan");
 const payment = require("./payment");
 const social = require("./social");
+const seo = require("./seo");
 const authenticateJWT = require("../middleware/AuthenticateJWT");
 
 function routes(app) {
@@ -30,6 +31,9 @@ function routes(app) {
   app.use("/api/category", authenticateJWT, category);
   app.use("/api/image", authenticateJWT, image);
   app.use("/api/post", authenticateJWT, post);
+
+  // Đánh giá & tối ưu SEO cho nội dung (editor đã đăng nhập)
+  app.use("/api/seo", authenticateJWT, seo);
 }
 
 module.exports = routes;

@@ -169,25 +169,9 @@ const pushToSatelliteWebsite = async (
         continue;
       }
 
-      // Kiểm tra xem site có ảnh hay không
-      const siteWithoutImage = !siteMatch.img || siteMatch.img.length === 0;
-      if (siteWithoutImage) {
-        // img rỗng thường do bước upload ảnh ở frontend thất bại. Thăm dò REST API
-        // để ghi đúng lý do (site chết / không có REST API) thay vì luôn báo 400.
-        const reachErrorCode = await checkSatelliteRestApi(satellite.url);
-        const errorCode = reachErrorCode || 400;
-        console.log(`⚠️ Site ${satellite.url} không đăng được (code ${errorCode})`);
-        await Post.findByIdAndUpdate(
-          newPost._id,
-          {
-            $addToSet: {
-              errorSatellite: { satelliteId: satellite._id, errorCode },
-            },
-          },
-          { new: true }
-        );
-        continue;
-      }
+      // Ảnh giờ được host trên server (URL công khai đã nằm sẵn trong <img src>),
+      // không còn phụ thuộc upload ảnh vào media của từng WordPress nên không skip
+      // site vì "thiếu ảnh" nữa — cứ đăng nội dung như đang có.
       let newContent = newPost.content;
 
       // Thay thế ảnh khi repost khác với khi đăng bài lần đầu

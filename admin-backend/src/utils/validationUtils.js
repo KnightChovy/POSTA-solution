@@ -76,6 +76,42 @@ const aiOutputSchema = z.object({
 });
 
 /**
+ * Validates the SEO evaluate/optimize request bodies (editor -> Express).
+ * Cả hai đều cần `content` (HTML) và `keyword` (từ khóa chính).
+ */
+const seoEvaluateSchema = z.object({
+  title: z.string().optional().default(""),
+  content: z.string().min(1, "content is required"),
+  // Để trống thì AI tự nhận diện từ khóa chính từ tiêu đề + nội dung.
+  keyword: z.string().optional().default(""),
+  language: z.string().default("vi"),
+});
+
+const seoOptimizeSchema = seoEvaluateSchema.extend({
+  // Danh sách lỗi từ lần chấm trước để AI tối ưu trúng đích (tùy chọn).
+  issues: z.array(z.string()).optional().default([]),
+});
+
+/** Validate object đánh giá SEO do AI trả về (chống output lệch shape). */
+const seoEvaluationSchema = z.object({
+  score: z.number().min(0).max(100),
+  grade: z.string().default(""),
+  // Từ khóa AI đã dùng để chấm (do người dùng nhập hoặc AI tự nhận diện).
+  keyword: z.string().default(""),
+  summary: z.string().default(""),
+  checks: z
+    .array(
+      z.object({
+        label: z.string(),
+        status: z.enum(["pass", "warn", "fail"]),
+        detail: z.string().default(""),
+      })
+    )
+    .min(1),
+  suggestions: z.array(z.string()).default([]),
+});
+
+/**
  * Flatten a ZodError into a compact, version-agnostic list of issues.
  * Avoids relying on .flatten()/.treeify() which differ between zod v3 and v4.
  */
@@ -88,13 +124,22 @@ const formatZodError = (error) =>
 const validateCampaignInput = (data) => campaignSchema.safeParse(data);
 const validateAiOutput = (data) => aiOutputSchema.safeParse(data);
 const validateSocialParaphrase = (data) => socialParaphraseSchema.safeParse(data);
+const validateSeoEvaluate = (data) => seoEvaluateSchema.safeParse(data);
+const validateSeoOptimize = (data) => seoOptimizeSchema.safeParse(data);
+const validateSeoEvaluation = (data) => seoEvaluationSchema.safeParse(data);
 
 module.exports = {
   campaignSchema,
   aiOutputSchema,
   socialParaphraseSchema,
+  seoEvaluateSchema,
+  seoOptimizeSchema,
+  seoEvaluationSchema,
   validateCampaignInput,
   validateAiOutput,
   validateSocialParaphrase,
+  validateSeoEvaluate,
+  validateSeoOptimize,
+  validateSeoEvaluation,
   formatZodError,
 };
