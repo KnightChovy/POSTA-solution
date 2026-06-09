@@ -1,9 +1,5 @@
-const axios = require('axios');
 const OpenAI = require('openai');
 require("dotenv").config();
-
-const API_URL = 'https://api.openai.com/v1/chat/completions';
-const API_KEY = process.env.OPENAI_API_KEY;
 
 // --- AI config for the campaign generation pipeline (provider-agnostic) ---
 // DeepSeek, OpenAI and most providers expose an OpenAI-compatible chat API,
@@ -65,25 +61,21 @@ const createVariations = async (inputContent) => {
     ĐÂY LÀ NỘI DUNG BÀI GỐC:
     ${inputContent}
   `;
-    const response = await axios.post(
-      API_URL,
-      {
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
-        // max_tokens: 100,
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    )
+    // Dùng chung client AI (DeepSeek/OpenAI-compatible) như các pipeline khác —
+    // trước đây hàm này gọi thẳng OpenAI + OPENAI_API_KEY (không có trong .env)
+    // nên đăng lên site thứ 2 trở đi luôn lỗi 401.
+    const client = getAiClient();
+    const completion = await client.chat.completions.create({
+      model: AI_MODEL,
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.8,
+    });
 
-    // console.log("kết quả chatgpt nè: ", response.data.choices[0].message.content);
-    return response.data.choices[0].message.content;
+    const content = completion?.choices?.[0]?.message?.content;
+    if (!content) throw new Error("AI trả về nội dung rỗng");
+    return content;
   } catch (error) {
-    console.error("Lỗi khi tạo biến thể nội dung:", error);
+    console.error("Lỗi khi tạo biến thể nội dung:", error.message);
     throw error;
   }
 };
@@ -229,17 +221,52 @@ const SOCIAL_PLATFORMS = {
 
 const DEFAULT_PLATFORM = { label: "social media", maxChars: 1000, hashtagCount: 5 };
 
-/** Strip HTML tags/entities so the model paraphrases plain prose, not markup. */
+// Bảng named entity Latin-1 thường gặp trong nội dung tiếng Việt do
+// TinyMCE/WordPress sinh ra (á = &aacute;, ô = &ocirc;, ...). Trước đây stripHtml
+// thay MỌI entity bằng dấu cách nên "Sài Gòn" thành "S i G n" — khiến text gửi AI
+// bị mất dấu và AI tưởng là lỗi chính tả. Giờ ta DECODE đúng thay vì xóa.
+const NAMED_ENTITIES = {
+  nbsp: " ", amp: "&", lt: "<", gt: ">", quot: '"', apos: "'",
+  agrave: "à", aacute: "á", acirc: "â", atilde: "ã", auml: "ä",
+  egrave: "è", eacute: "é", ecirc: "ê", euml: "ë",
+  igrave: "ì", iacute: "í", icirc: "î", iuml: "ï",
+  ograve: "ò", oacute: "ó", ocirc: "ô", otilde: "õ", ouml: "ö",
+  ugrave: "ù", uacute: "ú", ucirc: "û", uuml: "ü",
+  yacute: "ý", yuml: "ÿ", ntilde: "ñ", ccedil: "ç",
+  Agrave: "À", Aacute: "Á", Acirc: "Â", Atilde: "Ã", Auml: "Ä",
+  Egrave: "È", Eacute: "É", Ecirc: "Ê", Euml: "Ë",
+  Igrave: "Ì", Iacute: "Í", Icirc: "Î", Iuml: "Ï",
+  Ograve: "Ò", Oacute: "Ó", Ocirc: "Ô", Otilde: "Õ", Ouml: "Ö",
+  Ugrave: "Ù", Uacute: "Ú", Ucirc: "Û", Uuml: "Ü",
+  Yacute: "Ý", Ntilde: "Ñ", Ccedil: "Ç",
+  ndash: "–", mdash: "—", hellip: "…", deg: "°", sup2: "²", sup3: "³",
+  times: "×", divide: "÷", laquo: "«", raquo: "»", bull: "•",
+  lsquo: "‘", rsquo: "’", ldquo: "“", rdquo: "”",
+};
+
+/** Giải mã entity dạng số (&#7921; / &#x1EF1;) và dạng tên (&agrave;). */
+const decodeEntities = (str) =>
+  String(str)
+    .replace(/&#x([0-9a-fA-F]+);/g, (m, h) => {
+      try { return String.fromCodePoint(parseInt(h, 16)); } catch (e) { return m; }
+    })
+    .replace(/&#(\d+);/g, (m, d) => {
+      try { return String.fromCodePoint(parseInt(d, 10)); } catch (e) { return m; }
+    })
+    .replace(/&([A-Za-z][A-Za-z0-9]*);/g, (m, name) =>
+      Object.prototype.hasOwnProperty.call(NAMED_ENTITIES, name)
+        ? NAMED_ENTITIES[name]
+        : m
+    );
+
+/** Bỏ thẻ HTML + GIẢI MÃ entity để model nhận được prose tiếng Việt đúng dấu. */
 const stripHtml = (html = "") =>
-  String(html)
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
-    .replace(/&[a-z]+;/gi, " ")
+  decodeEntities(
+    String(html)
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+  )
     .replace(/\s+/g, " ")
     .trim();
 
@@ -343,4 +370,9 @@ module.exports = {
   createVariations,
   generateCampaignContent,
   paraphraseForSocial,
+  // Tái dùng cho seoUtils.js: client AI (DeepSeek/OpenAI-compatible), model
+  // mặc định và helper bỏ thẻ HTML — giữ một nguồn cấu hình duy nhất.
+  getAiClient,
+  AI_MODEL,
+  stripHtml,
 };

@@ -65,7 +65,8 @@ src/
 │   └── image.js                   # /api/image
 │
 ├── utils/
-│   ├── createVariations.js        # Gọi OpenAI gpt-4o-mini viết lại nội dung HTML
+│   ├── createVariations.js        # Gọi AI (DeepSeek, qua getAiClient) viết lại nội dung HTML; export client/model dùng chung
+│   ├── seoUtils.js                # Đánh giá & tối ưu SEO theo từ khóa (dùng chung client AI)
 │   ├── postUtils.js               # replaceImagesInContent: thay <img src> theo ảnh của từng site
 │   ├── satelliteUtils.js          # convertErrorSatelliteToUrls: map satelliteId → url khi trả về client
 │   └── apiUtils.js                # createBasicAuthHeader
@@ -131,7 +132,7 @@ POST /api/post (multipart: images + values JSON + siteInfoWithImageUrl)
             → lấy tất cả satellite ACTIVE
             → với mỗi site: enqueue task lên p-queue  [config/queue/pqueue.js]
                   ├─ replaceImagesInContent  [utils/postUtils.js]  thay <img src> theo ảnh site
-                  ├─ (từ site thứ 2) createVariations  [utils/createVariations.js]  OpenAI viết lại prose, giữ nguyên HTML tag
+                  ├─ (từ site thứ 2) createVariations  [utils/createVariations.js]  AI (DeepSeek) viết lại prose, giữ nguyên HTML tag
                   └─ postToSatellite  [apis/post.js]  POST {url}/wp-json/wp/v2/posts (Basic Auth của site)
             → queue.on('completed') → $addToSet postedSatellite (link thành công)
             → lỗi → $addToSet errorSatellite { satelliteId, errorCode }
@@ -222,7 +223,10 @@ JWT_SECRET=...                                   # Khóa ký JWT (cho Authentica
 SESSION_SECRET_KEY=...                           # Khóa express-session
 APP_USERNAME=...                                 # Tài khoản admin duy nhất (login)
 APP_PASSWORD=...                                 # Mật khẩu admin
-OPENAI_API_KEY=...                               # Khóa OpenAI cho createVariations.js
+DEEPSEEK_API_KEY=...                             # Khóa AI dùng chung (DeepSeek mặc định) cho createVariations/seoUtils
+# OPENAI_API_KEY=...                             # Tùy chọn: nếu muốn dùng OpenAI thay DeepSeek
+# AI_BASE_URL=https://api.deepseek.com           # Đổi base URL nếu dùng provider khác
+# AI_MODEL=deepseek-chat                         # Model mặc định
 SERVER_URL=...                                   # Base URL công khai của server (build URL ảnh tuyệt đối khi repost)
 
 # Gửi email xác thực / reset mật khẩu (mailer.js đọc cả SMTP_* lẫn EMAIL_*)
@@ -252,7 +256,7 @@ SEPAY_BANK_CODE=...                               # mã ngân hàng cho VietQR
 
 ## 9. Điểm "lệch" cần biết (đã xác minh)
 
-- **`OPENAI_API_KEY` vs `.env`:** [createVariations.js](admin-backend/src/utils/createVariations.js) đọc `process.env.OPENAI_API_KEY`, nhưng `.env` mẫu lại chỉ có `DEEPSEEK_API_KEY` — biến lệch tên, tính năng viết lại sẽ fail nếu không set đúng `OPENAI_API_KEY`. Kiểm tra trước khi dựa vào tính năng variation.
+- **AI provider thống nhất qua `getAiClient()`:** mọi pipeline AS (`createVariations`, `generateCampaignContent`, `paraphraseForSocial`, `seoUtils`) dùng chung client OpenAI-compatible trong [createVariations.js](admin-backend/src/utils/createVariations.js), cấu hình bằng `DEEPSEEK_API_KEY` (hoặc `OPENAI_API_KEY`) + `AI_BASE_URL`/`AI_MODEL`. Mặc định chạy **DeepSeek** (`deepseek-chat`). *(Trước đây `createVariations` gọi thẳng OpenAI `gpt-4o-mini` + `OPENAI_API_KEY` — biến không có trong `.env` nên đăng lên site thứ 2 trở đi luôn 401; đã sửa để dùng client chung.)*
 - **JWT chưa được dùng:** middleware `AuthenticateJWT.js` tồn tại nhưng không route nào gắn; login không trả token. Auth thực tế chỉ là so khớp credential `.env`.
 - **`WP_USERNAME`/`WP_PASSWORD` trong `.env` không được dùng** — credential WordPress lấy theo từng `Satellite` trong DB, không phải biến env toàn cục.
 - **`SERVER_URL` bắt buộc cho repost & getErrorPost:** các hàm này build URL ảnh `${process.env.SERVER_URL}/${img}`; thiếu biến này ảnh sẽ hỏng.
