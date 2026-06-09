@@ -12,6 +12,8 @@ const Transaction = new Schema({
   status: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
   provider: { type: String, enum: ['sepay', 'mock', 'manual'], default: 'sepay' },
   reference: { type: String, index: true }, // mã đối soát ghi trong nội dung chuyển khoản
+  providerTxId: { type: String, default: '' }, // id giao dịch bên SePay (đối soát/audit)
+  paidAmount: { type: Number }, // số tiền thực nhận từ webhook (có thể >= amount)
   note: { type: String, default: '' }, // lý do khi admin cấp/đổi gói thủ công (audit)
   createdBy: { type: Schema.Types.ObjectId, ref: 'user' }, // admin thực hiện (nếu là thao tác thủ công)
   paidAt: { type: Date },

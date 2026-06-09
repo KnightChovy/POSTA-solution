@@ -79,7 +79,8 @@ src/
 
 ```bash
 npm install
-npm start          # nodemon --inspect src/index.js (hot-reload + bật debugger)
+npm run dev        # nodemon --inspect src/index.js (hot-reload + bật debugger) — DÙNG KHI DEV
+npm start          # node src/index.js (production, vd Render)
 ```
 
 - **Không có** bước build, **không có** linter, **không có** test runner (`npm test` chỉ là placeholder, exit 1). Đừng giả định có `npm run build`/`npm run lint`/`npm test`.
