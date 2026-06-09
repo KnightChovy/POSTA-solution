@@ -4,7 +4,8 @@ const Category = require("../models/Category");
 // DONE: Get all satellites
 const getAllSatellites = async (req, res) => {
   try {
-    const satellites = await Satellite.find({ status: 'ACTIVE' });
+    // Chỉ trả về vệ tinh của chính user đang đăng nhập (đa người dùng).
+    const satellites = await Satellite.find({ owner: req.user.id, status: 'ACTIVE' });
     return res.status(200).json({ satellites });
   } catch (error) {
     return res.status(500).json({ error });
@@ -21,7 +22,8 @@ const addSatellite = async (req, res) => {
       return res.status(400).json({ message: "URL is required" });
     }
 
-    const existingUrl = await Satellite.findOne({ url });
+    // Chống trùng theo từng user: 2 user khác nhau vẫn có thể dùng cùng 1 URL.
+    const existingUrl = await Satellite.findOne({ url, owner: req.user.id, status: 'ACTIVE' });
     if (existingUrl) {
       return res.status(400).json({ message: "Website vệ tinh đã tồn tại" });
     }
@@ -130,6 +132,10 @@ const updateSatellite = async (req, res) => {
     if (!satellite) {
       return res.status(404).json({ message: "Satellite not found" });
     }
+    // Chỉ chủ sở hữu mới được sửa.
+    if (String(satellite.owner) !== String(req.user.id)) {
+      return res.status(403).json({ message: "Bạn không có quyền sửa website vệ tinh này" });
+    }
 
     const updatedSatellite = await Satellite.findByIdAndUpdate(
       id,
@@ -150,14 +156,16 @@ const updateSatellite = async (req, res) => {
 const deleteSatellite = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedSatellite = await Satellite.findByIdAndUpdate(
-      id,
-      { status: 'INACTIVE' },
-      { new: true }
-    );
-    if (!deletedSatellite) {
+    const satellite = await Satellite.findById(id);
+    if (!satellite) {
       return res.status(404).json({ message: "Satellite not found" });
     }
+    // Chỉ chủ sở hữu mới được xoá.
+    if (String(satellite.owner) !== String(req.user.id)) {
+      return res.status(403).json({ message: "Bạn không có quyền xoá website vệ tinh này" });
+    }
+    satellite.status = 'INACTIVE';
+    await satellite.save();
     res.status(200).json({ message: "Satellite deleted successfully" });
   } catch (error) {
     res.status(500).json({ error });

@@ -68,8 +68,8 @@ const createNewPost = async (req, res) => {
     // <p><img src="https://canho-bconssolary.com/wp-content/uploads/2025/11/0450c9c27e39c96790284.jpg" alt="0450c9c27e39c96790284.jpg" width="1280" height="960"></p>
     // <p><img src="https://canho-bconssolary.com/wp-content/uploads/2025/11/0450c9c27e39c96790284.jpg" alt="0450c9c27e39c96790284.jpg" width="1280" height="960"></p>
     // `
-    // Chỉ đếm satellite có status ACTIVE
-    const totalSatellite = await Satellite.countDocuments({ status: "ACTIVE" });
+    // Chỉ đếm vệ tinh ACTIVE của chính user đang đăng (đa người dùng)
+    const totalSatellite = await Satellite.countDocuments({ owner: req.user.id, status: "ACTIVE" });
 
     if (!title || !content) {
       return res
@@ -128,8 +128,8 @@ const pushToSatelliteWebsite = async (
   isRepost = false
 ) => {
   try {
-    // Chỉ lấy những satellite có status ACTIVE
-    const satellites = await Satellite.find({ status: "ACTIVE" });
+    // Chỉ lấy vệ tinh ACTIVE CỦA CHỦ BÀI VIẾT — không đăng nhầm lên site của user khác
+    const satellites = await Satellite.find({ owner: newPost.owner, status: "ACTIVE" });
     if (!satellites.length) {
       console.warn("⚠️ No ACTIVE satellite sites found in DB.");
       return { successfulSatelliteUrls: [], progress };
@@ -255,6 +255,13 @@ const repostToErrorSatellitesOnePost = async (req, res) => {
     const existingPost = await Post.findById(req.params.id).populate(
       "errorSatellite.satelliteId"
     );
+    if (!existingPost) {
+      return res.status(404).json({ message: "Không tìm thấy bài viết" });
+    }
+    // Chỉ chủ bài viết mới được đăng lại.
+    if (String(existingPost.owner) !== String(req.user.id)) {
+      return res.status(403).json({ message: "Bạn không có quyền đăng lại bài viết này" });
+    }
     const errorSitesInfo = existingPost.errorSatellite;
     let siteInfoWithImageUrl = errorSitesInfo.map((site) => {
       formattedObj.push({
@@ -269,8 +276,9 @@ const repostToErrorSatellitesOnePost = async (req, res) => {
       return formattedObj[formattedObj.length - 1];
     });
     const { successfulRate } = existingPost;
-    // Lấy totalSatellite ACTIVE hiện tại, có thể khác với lúc tạo post
+    // Lấy totalSatellite ACTIVE hiện tại của chủ bài viết (có thể khác lúc tạo post)
     const currentTotalActiveSatellite = await Satellite.countDocuments({
+      owner: existingPost.owner,
       status: "ACTIVE",
     });
 
