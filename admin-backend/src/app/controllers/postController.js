@@ -1,11 +1,16 @@
 const Post = require("../models/Post");
 const Satellite = require("../models/Satellite");
 const getQueue = require("../../config/queue/pqueue");
-const { postToSatellite } = require("../../apis/post");
+const {
+  postToSatellite,
+  checkSatelliteRestApi,
+  errorCodeFromAxios,
+} = require("../../apis/post");
 const { convertErrorSatelliteToUrls } = require("../../utils/satelliteUtils");
 const { createVariations } = require("../../utils/createVariations");
 const { saveImageToServer } = require("./imageController");
 const { replaceImagesInContent } = require("../../utils/postUtils");
+const { incrementAiUsage } = require("../../utils/subscription");
 const getAllPosts = async (req, res) => {
   try {
     const allPosts = await Post.find();
@@ -83,9 +88,15 @@ const createNewPost = async (req, res) => {
         postedSatellite: [],
         errorSatellite: [],
         successfulRate: 0,
+        owner: req.user?.id, // gắn chủ sở hữu để đếm quota bài đăng theo user
       },
       { new: true }
     );
+
+    // Đếm 1 lần dùng AI cho mỗi bài tạo (pipeline viết lại nội dung bằng AI).
+    if (req.user?.id) {
+      try { await incrementAiUsage(req.user.id); } catch (e) { console.error('[post] incrementAiUsage:', e.message); }
+    }
 
     const { successfulSatelliteUrls, progress } = await pushToSatelliteWebsite(
       newPost,
@@ -126,28 +137,23 @@ const pushToSatelliteWebsite = async (
 
     const queue = getQueue();
     const successfulSatelliteUrls = [];
-
-    queue.on("completed", async (result) => {
-      if (result?.data?.link) {
-        successfulSatelliteUrls.push(result.data.link);
-        progress += 1;
-
-        // Thêm vào mảng postedSatellite thay vì thay thế
-        await Post.findOneAndUpdate(
-          { _id: newPost._id },
-          { $addToSet: { postedSatellite: result.data.link } }
-        );
-      }
-    });
-
-    queue.on("error", async (error) => {
-      console.log("Task failed:", error);
-    });
+    // Thu kết quả trực tiếp từ queue.add() thay vì queue.on() trên queue singleton:
+    // listener đăng ký theo request sẽ rò rỉ và bắn nhầm vào request sau (gây crash).
+    const tasks = [];
+    // Site đầu tiên dùng nội dung gốc; các site sau tạo variation. Quyết định ngay
+    // lúc enqueue (vòng for chạy tuần tự) để không bị race giữa các task song song.
+    let useOriginalContent = isFirstSatellite;
 
     for (const satellite of satellites) {
-      const siteMatch = Object.values(siteInfoWithImageUrl).find((site) =>
-        satellite.url.includes(new URL(site.url))
-      );
+      // So khớp theo hostname để bỏ qua khác biệt dấu "/" cuối hay http/https.
+      // (new URL(x) ép sang chuỗi sẽ thêm "/" cuối khiến .includes() luôn fail)
+      const siteMatch = Object.values(siteInfoWithImageUrl).find((site) => {
+        try {
+          return new URL(satellite.url).hostname === new URL(site.url).hostname;
+        } catch (e) {
+          return false;
+        }
+      });
 
       if (!siteMatch) {
         console.log(`⚠️ Không tìm thấy site tương ứng cho ${satellite.url}`);
@@ -166,12 +172,16 @@ const pushToSatelliteWebsite = async (
       // Kiểm tra xem site có ảnh hay không
       const siteWithoutImage = !siteMatch.img || siteMatch.img.length === 0;
       if (siteWithoutImage) {
-        console.log(`⚠️ Site ${satellite.url} không có ảnh để post`);
+        // img rỗng thường do bước upload ảnh ở frontend thất bại. Thăm dò REST API
+        // để ghi đúng lý do (site chết / không có REST API) thay vì luôn báo 400.
+        const reachErrorCode = await checkSatelliteRestApi(satellite.url);
+        const errorCode = reachErrorCode || 400;
+        console.log(`⚠️ Site ${satellite.url} không đăng được (code ${errorCode})`);
         await Post.findByIdAndUpdate(
           newPost._id,
           {
             $addToSet: {
-              errorSatellite: { satelliteId: satellite._id, errorCode: 400 },
+              errorSatellite: { satelliteId: satellite._id, errorCode },
             },
           },
           { new: true }
@@ -190,49 +200,52 @@ const pushToSatelliteWebsite = async (
         newContent = replaceImagesInContent(newContent, images);
       }
 
-      const post = {
-        title: newPost.title,
-        content: newContent,
-        status: "publish",
-      };
+      const sendOriginal = useOriginalContent;
+      useOriginalContent = false; // các site tiếp theo sẽ tạo variation
 
-      queue.add(async () => {
-        try {
-          let newContentVariation = "";
-          if (isFirstSatellite) {
-            // không tạo variation cho lần đầu tiên gửi
-            newContentVariation = newContent;
-            isFirstSatellite = false;
-          } else {
-            // từ lần thứ 2 trở đi mới tạo variation
-            newContentVariation = await createVariations(newContent);
-          }
-          post.content = newContentVariation;
-          const res = await postToSatellite(satellite, post);
-          return res;
-        } catch (error) {
-          await Post.findByIdAndUpdate(
-            newPost._id,
-            {
-              $addToSet: {
-                errorSatellite: {
-                  satelliteId: satellite._id,
-                  errorCode: error?.status || 500,
+      tasks.push(
+        queue.add(async () => {
+          try {
+            const content = sendOriginal
+              ? newContent
+              : await createVariations(newContent);
+            const post = { title: newPost.title, content, status: "publish" };
+            return await postToSatellite(satellite, post);
+          } catch (error) {
+            await Post.findByIdAndUpdate(
+              newPost._id,
+              {
+                $addToSet: {
+                  errorSatellite: {
+                    satelliteId: satellite._id,
+                    errorCode: errorCodeFromAxios(error),
+                  },
                 },
               },
-            },
-            { new: true }
-          );
-        }
-      });
+              { new: true }
+            );
+          }
+        })
+      );
     }
 
-    await queue.onIdle();
-    queue.clear();
-    queue.removeAllListeners();
+    // Chờ mọi task của riêng request này rồi xử lý kết quả (không qua listener toàn cục)
+    const results = await Promise.all(tasks);
+    for (const result of results) {
+      if (result?.data?.link) {
+        successfulSatelliteUrls.push(result.data.link);
+        progress += 1;
+        await Post.findOneAndUpdate(
+          { _id: newPost._id },
+          { $addToSet: { postedSatellite: result.data.link } }
+        );
+      }
+    }
+
     return { successfulSatelliteUrls, progress };
   } catch (error) {
-    return [];
+    console.log("Lỗi khi đẩy bài lên vệ tinh:", error);
+    return { successfulSatelliteUrls: [], progress };
   }
 };
 

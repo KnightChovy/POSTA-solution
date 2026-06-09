@@ -1,25 +1,28 @@
-const jwt = require('jsonwebtoken')
-const authenticateJWT = async (req, res, next) => {
+const { verifyAccessToken } = require('../utils/token');
+
+// Bảo vệ route: yêu cầu access token hợp lệ ở header "Authorization: Bearer <token>".
+const authenticateJWT = (req, res, next) => {
   try {
-    const token = req.headers.authorization && req.headers.authorization.split(' ')[1]
+    const header = req.headers.authorization || '';
+    const token = header.startsWith('Bearer ') ? header.slice(7) : null;
     if (!token) {
-      return res.status(401).json({ message: 'No token provided. Please log in.' })
+      return res.status(401).json({ error: true, message: 'Chưa đăng nhập' });
     }
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-      if (err) {
-        return res.status(403).json({ message: 'Invalid token' })
-      }
-      const { id, username } = decoded
-      req.id = id
-      req.username = username
-      req.token = token
-      next()
-    });
-
+    const decoded = verifyAccessToken(token);
+    req.user = { id: decoded.id, email: decoded.email, isAdmin: !!decoded.isAdmin };
+    next();
   } catch (error) {
-    return res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    return res.status(401).json({ error: true, message: 'Token không hợp lệ hoặc đã hết hạn' });
   }
+};
 
-}
+// Chỉ cho phép quản trị viên.
+const requireAdmin = (req, res, next) => {
+  if (!req.user?.isAdmin) {
+    return res.status(403).json({ error: true, message: 'Bạn không có quyền truy cập' });
+  }
+  next();
+};
 
-module.exports = authenticateJWT
+module.exports = authenticateJWT;
+module.exports.requireAdmin = requireAdmin;

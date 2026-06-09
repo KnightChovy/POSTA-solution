@@ -8,19 +8,35 @@ const cors = require("cors");
 
 require('dotenv').config();
 const mongoDB = require('./config/db/mongoDB')
+const { seedPlans } = require('./config/db/seedPlans')
 const app = express();
 
-mongoDB.connect()
+// Kết nối DB xong thì seed gói dịch vụ mặc định (chỉ chạy khi collection rỗng).
+mongoDB.connect().then(() => seedPlans())
 
 app.use(cookieParser());
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-app.use(express.json());
+// Tăng giới hạn để nhận avatar dạng base64 (mặc định 100kb là quá nhỏ)
+app.use(bodyParser.urlencoded({ extended: false, limit: '5mb' }));
+app.use(bodyParser.json({ limit: '5mb' }));
+app.use(express.json({ limit: '5mb' }));
+// Cho phép NHIỀU origin (dev + production). Khai báo trong CLIENT_URL, ngăn cách bằng dấu phẩy.
+// Vd: CLIENT_URL=http://localhost:5173,https://posta-solution.vercel.app
+const allowedOrigins = (process.env.CLIENT_URL || "")
+  .split(",")
+  .map((o) => o.trim().replace(/\/$/, "")) // bỏ "/" cuối để so khớp ổn định
+  .filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CLIENT_URL,
+  origin: function (origin, callback) {
+    // Không có origin = request server-to-server (webhook SePay, Postman) → cho qua.
+    if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ""))) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS: origin không được phép - ${origin}`));
+  },
   methods: "GET, POST, PUT, DELETE, PATCH, OPTIONS",
   credentials: true,
 }));
