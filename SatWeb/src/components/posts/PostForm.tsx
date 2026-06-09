@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import axios from "axios";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -20,10 +21,16 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
 import wpSites from "@/state/wpSite";
 import useProgressStore from "@/store/progress";
-import { CheckCircle, Loader2, UploadCloud } from "lucide-react";
+import { CheckCircle, Loader2, UploadCloud, Search } from "lucide-react";
 import { PerformanceDisplay } from "@/components/ui/PerformanceDisplay";
 import useSatelliteStore from "@/store/satetillite";
 import { checkSitesFast } from "@/lib/utils";
+import useSeoStore from "@/store/seoStore";
+import SeoPanel from "@/components/posts/SeoPanel";
+
+// Key TinyMCE (cloud) đọc từ env -> dùng key của bạn, đổi domain/khoá không phải
+// sửa code. Set trong SatWeb/.env (local) và Environment trên Vercel (production).
+const TINYMCE_API_KEY = import.meta.env.VITE_TINYMCE_API_KEY as string;
 
 const formSchema = z.object({
   title: z
@@ -65,8 +72,18 @@ const PostForm = ({
   const { setProgress } = useProgressStore();
   const { measureAsync, clearMetrics, metrics } = usePerformanceMonitor();
   const { getSatellite, satellites } = useSatelliteStore();
-  const [images, setImages] = useState<File[]>([]);
+  const {
+    evaluate,
+    optimize,
+    evaluation,
+    metrics: seoMetrics,
+    evaluating,
+    optimizing,
+    reset: resetSeo,
+  } = useSeoStore();
   const [selectedSites, setSelectedSites] = useState<string[]>([]);
+  const [keyword, setKeyword] = useState("");
+  const [publishing, setPublishing] = useState(false);
 
   const storeImgTemp = satellites.map((site) => {
     return {
@@ -103,6 +120,13 @@ const PostForm = ({
     getSatellite();
   }, []);
 
+  // Xóa kết quả chấm SEO khi mở/rời trang soạn bài để bài mới không "dính" điểm
+  // của bài trước (seoStore là store toàn cục, không tự reset).
+  useEffect(() => {
+    resetSeo();
+    return () => resetSeo();
+  }, []);
+
   // useEffect(() => {
   //   async function runCheck() {
   //     const results = await checkSitesFast(satellites);
@@ -123,7 +147,10 @@ const PostForm = ({
     defaultValues,
   });
 
-  const handleSubmit = async (values: FormValues) => {
+  // Đăng bài thật (fan-out lên các site vệ tinh). Chỉ chạy sau khi đã chấm SEO,
+  // được gọi từ nút "Đăng bài ngay" trong SeoPanel.
+  const doPublish = async (values: FormValues) => {
+    setPublishing(true);
     const toastId = toast.info("🔄 Bắt đầu clone bài viết...", {
       autoClose: false,
     });
@@ -170,7 +197,6 @@ const PostForm = ({
     await fakeStep("Gửi yêu cầu đến máy chủ...", 65);
 
     try {
-      const url = `${import.meta.env.VITE_API_BASE_URL}/api/post`;
       const formData = new FormData();
       formData.append("values", JSON.stringify(values));
       formData.append(
@@ -178,13 +204,13 @@ const PostForm = ({
         JSON.stringify(siteInfoWithImageUrl.current)
       );
 
-      images.forEach((file) => formData.append("images", file));
-
-      const response = await fetch(url, {
-        method: "POST",
-        body: formData,
+      // Dùng axios (global) để interceptor tự gắn "Authorization: Bearer" +
+      // tự refresh khi 401. fetch trần trước đây không có token nên /api/post
+      // (sau authenticateJWT) luôn trả 401.
+      const response = await axios.post(`/api/post`, formData, {
+        withCredentials: true,
       });
-      const data = await response.json();
+      const data = response.data;
       const { newPost } = data;
       if (data.successfulSatelliteUrls.length === 0) {
         toast.error("Không thể tạo bài viết trên bất kỳ trang vệ tinh nào.", {
@@ -201,51 +227,92 @@ const PostForm = ({
       toast.error("Tạo bài viết thất bại!", { autoClose: 3000 });
     } finally {
       setUploading(false);
+      setPublishing(false);
     }
   };
 
-  // Upload ảnh lên nhiều WordPress site
-  const uploadImageToMultipleWordPress = async (file: File) => {
-    setImages((prev) => [...prev, file]);
-    const uploadPromises = siteInfoWithImageUrl.current.map(async (site) => {
-      let count = 0;
-      const url = `${site.url}wp-json/wp/v2/media`;
-      const appPassword = site.password.replace(/\s+/g, "");
-      const formData = new FormData();
-      formData.append("file", file, file.name);
-      const auth = btoa(`${site.username}:${appPassword}`);
-      try {
-        let data = null;
-        const check = await fetch(url, { method: "HEAD" });
-        if (check.ok) {
-          const res = await fetch(url, {
-            method: "POST",
-            headers: { Authorization: `Basic ${auth}` },
-            body: formData,
-          });
-
-          if (!res.ok) {
-            toast.error(`Upload ảnh lên ${site.url} thất bại!`);
-            return null;
-          }
-          data = await res.json();
-          siteInfoWithImageUrl.current = siteInfoWithImageUrl.current.map(
-            (c) => {
-              if (c.url.includes(site.url)) {
-                return { ...c, img: [...c.img, data.source_url] };
-              }
-              return c;
-            }
-          );
-          toast.success(`Upload ảnh lên ${site.url} thành công!`);
-        }
-        return { link: data?.source_url };
-      } catch (error) {
-        toast.error(`Upload ảnh lên ${site.url} thất bại!`);
-        return null;
-      }
+  // Bước trước khi đăng: chấm điểm SEO (tự nhận diện từ khóa nếu để trống) rồi
+  // hiện panel để người dùng xem điểm, tối ưu, rồi mới bấm "Đăng bài ngay".
+  const handlePrePublish = async (values: FormValues) => {
+    const result = await evaluate({
+      title: values.title,
+      content: values.content,
+      keyword: keyword.trim(),
     });
-    return await Promise.all(uploadPromises);
+    if (result) {
+      toast.info(
+        `Đã chấm điểm SEO: ${result.score}/100. Xem đánh giá bên dưới rồi bấm "Đăng bài ngay".`
+      );
+    }
+  };
+
+  // Chấm điểm SEO nội dung đang soạn theo từ khóa chính.
+  const handleCheckSeo = async () => {
+    const title = form.getValues("title");
+    const content = form.getValues("content");
+    if (!content?.trim()) {
+      toast.warning("Nội dung đang trống, chưa thể chấm điểm SEO.");
+      return;
+    }
+    // keyword để trống -> AI tự nhận diện từ khóa chính.
+    await evaluate({ title, content, keyword: keyword.trim() });
+  };
+
+  // Nhờ AI viết lại nội dung cho chuẩn SEO rồi ghi đè vào editor + chấm lại.
+  const handleOptimizeSeo = async () => {
+    const title = form.getValues("title");
+    const content = form.getValues("content");
+    // Đưa các tiêu chí chưa đạt + gợi ý sang cho AI tối ưu trúng đích.
+    const issues = evaluation
+      ? [
+          ...evaluation.checks
+            .filter((c) => c.status !== "pass")
+            .map((c) => `${c.label}: ${c.detail}`),
+          ...evaluation.suggestions,
+        ]
+      : [];
+
+    const result = await optimize({
+      title,
+      content,
+      keyword: keyword.trim(),
+      issues,
+    });
+    if (!result) return;
+
+    form.setValue("content", result.content, { shouldValidate: true });
+    if (result.title) {
+      form.setValue("title", result.title, { shouldValidate: true });
+    }
+    toast.success("Đã tối ưu nội dung chuẩn SEO!");
+    // Chấm lại để người dùng thấy điểm mới ngay.
+    await evaluate({
+      title: result.title || title,
+      content: result.content,
+      keyword: keyword.trim(),
+    });
+  };
+
+  // Upload 1 ảnh lên server của mình -> trả URL công khai (phục vụ qua /uploads).
+  // Editor chèn thẳng URL này vào <img>, dùng chung cho mọi site vệ tinh — không
+  // upload vào media của từng WordPress nữa (tránh CORS + không lộ app password).
+  const uploadImageToServer = async (
+    file: Blob,
+    filename?: string
+  ): Promise<string> => {
+    const type = file.type || "image/png";
+    const ext = type.split("/")[1] || "png";
+    const name =
+      filename && /\.[a-z0-9]+$/i.test(filename)
+        ? filename
+        : `image-${Date.now()}.${ext}`;
+    const formData = new FormData();
+    formData.append("image", file, name);
+    const res = await axios.post(`/api/image/upload`, formData, {
+      withCredentials: true,
+    });
+    if (!res.data?.url) throw new Error("Upload ảnh thất bại");
+    return res.data.url as string;
   };
 
   const file_picker_callback = (callback, value, meta) => {
@@ -257,24 +324,11 @@ const PostForm = ({
       input.onchange = async function () {
         const file = (this as HTMLInputElement).files?.[0];
         if (!file) return;
-
         try {
-          const results = await uploadImageToMultipleWordPress(file);
-
-          const validResults = Array.isArray(results)
-            ? results.filter((r) => r && r.link)
-            : [];
-
-          if (validResults.length === 0) {
-            alert("Không thể upload ảnh lên bất kỳ site nào.");
-            return;
-          }
-
-          const firstResult = validResults[0];
-
-          callback(firstResult.link, { alt: file.name });
+          const url = await uploadImageToServer(file, file.name);
+          callback(url, { alt: file.name });
         } catch (err) {
-          alert("Upload ảnh thất bại. Vui lòng thử lại.");
+          toast.error("Upload ảnh thất bại. Vui lòng thử lại.");
         }
       };
 
@@ -319,7 +373,7 @@ const PostForm = ({
       <div className="w-full border-[2px] max-w-4xl mx-auto bg-white">
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(handleSubmit)}
+            onSubmit={form.handleSubmit(handlePrePublish)}
             className="space-y-6 p-6"
           >
             <FormField
@@ -345,7 +399,7 @@ const PostForm = ({
                   <FormLabel>Nội dung</FormLabel>
                   <FormControl>
                     <Editor
-                      apiKey="de7eylucb6hopyd8di8ruii0oabt5ylm78zmnnw9dgahz07g"
+                      apiKey={TINYMCE_API_KEY}
                       value={field.value}
                       onEditorChange={(v) => field.onChange(v)}
                       init={{
@@ -353,8 +407,7 @@ const PostForm = ({
                         menubar: true,
                         width: "100%",
                         language: "vi",
-                        language_url:
-                          "https://cdn.tiny.cloud/1/de7eylucb6hopyd8di8ruii0oabt5ylm78zmnnw9dgahz07g/tinymce/8/langs/vi.js",
+                        language_url: `https://cdn.tiny.cloud/1/${TINYMCE_API_KEY}/tinymce/8/langs/vi.js`,
                         plugins: [
                           "advlist",
                           "autolink",
@@ -377,28 +430,13 @@ const PostForm = ({
                         toolbar:
                           "undo redo | formatselect | bold italic underline | " +
                           "alignleft aligncenter alignright alignjustify | " +
-                          "bullist numlist outdent indent | image media table | removeformat | help",
+                          "bullist numlist outdent indent | link unlink image media table | removeformat | help",
                         file_picker_callback: file_picker_callback,
-                        images_upload_handler: async (blobInfo) => {
-                          const file = blobInfo.blob();
-                          // const blob = blobInfo.blob();
-                          // const filev2 = new File([blob], blobInfo.filename(), {
-                          //   type: blob.type,
-                          // });
-
-                          // setImages((prev) => [...prev, filev2]);
-                          const urls = await uploadImageToMultipleWordPress(
-                            file
-                          );
-                          const valid = Array.isArray(urls)
-                            ? urls.filter((r) => r && r.link)
-                            : [];
-                          if (valid.length === 0)
-                            throw new Error(
-                              "Không có site nào upload thành công"
-                            );
-                          return valid[0].link;
-                        },
+                        images_upload_handler: async (blobInfo) =>
+                          uploadImageToServer(
+                            blobInfo.blob(),
+                            blobInfo.filename()
+                          ),
                         automatic_uploads: true,
                         file_picker_types: "image",
                         image_advtab: true,
@@ -421,23 +459,80 @@ const PostForm = ({
               )}
             />
 
+            {/* Từ khóa SEO + nút chấm điểm */}
+            <div className="space-y-2 pt-4 border-t">
+              <FormLabel>Từ khóa SEO (tùy chọn)</FormLabel>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Để trống thì AI tự nhận diện từ khóa chính"
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="cursor-pointer shrink-0"
+                  onClick={handleCheckSeo}
+                  disabled={evaluating}
+                >
+                  {evaluating ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Search className="w-4 h-4 mr-2" />
+                  )}
+                  Kiểm tra SEO
+                </Button>
+              </div>
+              <FormDescription>
+                Không bắt buộc — để trống thì AI tự tìm từ khóa chính khi chấm
+                điểm và tối ưu nội dung.
+              </FormDescription>
+            </div>
+
             <div className="flex justify-between items-center space-x-2 pt-4 border-t">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => {
                   form.reset();
+                  setKeyword("");
+                  resetSeo();
                 }}
               >
                 Hủy
               </Button>
-              <Button disabled={uploading} type="submit">
-                {isEditing ? "Lưu thay đổi" : "Tạo bài viết"}
+              <Button
+                disabled={uploading || evaluating || publishing}
+                type="submit"
+                className="cursor-pointer"
+              >
+                {evaluating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Đang chấm điểm...
+                  </>
+                ) : isEditing ? (
+                  "Lưu thay đổi"
+                ) : (
+                  "Chấm điểm SEO & chuẩn bị đăng"
+                )}
               </Button>
             </div>
           </form>
         </Form>
       </div>
+
+      {/* Kết quả đánh giá SEO + nút tối ưu lại */}
+      {evaluation && (
+        <SeoPanel
+          evaluation={evaluation}
+          metrics={seoMetrics}
+          optimizing={optimizing}
+          onOptimize={handleOptimizeSeo}
+          onPublish={() => doPublish(form.getValues())}
+          publishing={publishing}
+        />
+      )}
     </div>
   );
 };
