@@ -39,8 +39,15 @@ const User = new Schema({
   isActive: { type: Boolean, default: true }, // admin có thể khoá tài khoản
   provider: { type: String, enum: ['local', 'google'], default: 'local' },
 
-  // Gói dịch vụ (phục vụ doanh thu)
-  plan: { type: String, enum: ['none', 'basic', 'pro', 'enterprise'], default: 'none' },
+  // Gói dịch vụ (phục vụ doanh thu). Là `key` của một Plan động — không ràng buộc enum
+  // để có thể thêm/clone gói tuỳ ý; giá trị cũ (none/basic/pro/enterprise) vẫn đọc được.
+  plan: { type: String, default: 'freemium' },
+
+  // Đếm mức dùng AI theo kỳ (count & display, chưa chặn cứng). Reset khi qua kỳ.
+  usage: {
+    aiCount: { type: Number, default: 0 },
+    periodStart: { type: Date, default: Date.now },
+  },
 
   // Phiên đăng nhập + lịch sử
   sessions: { type: [SessionSchema], default: [] },

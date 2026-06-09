@@ -2,15 +2,29 @@ const nodemailer = require('nodemailer');
 
 // Chỉ tạo transporter khi đã cấu hình SMTP trong .env.
 // Thiếu cấu hình thì trả null để đăng ký vẫn chạy được (chỉ bỏ qua email).
+// Hỗ trợ cả 2 bộ tên biến: SMTP_* (mới) và EMAIL_* (cũ).
+function smtpConfig() {
+  const host = process.env.SMTP_HOST || process.env.EMAIL_HOST || 'smtp.gmail.com';
+  const port = Number(process.env.SMTP_PORT || process.env.EMAIL_PORT) || 587;
+  const user = process.env.SMTP_USERNAME || process.env.EMAIL_USER;
+  const pass = process.env.SMTP_PASSWORD || process.env.EMAIL_PASS;
+  return { host, port, user, pass };
+}
+
+function mailFrom() {
+  const { user } = smtpConfig();
+  return process.env.EMAIL_FROM || `POSTA <${user}>`;
+}
+
 function createTransporter() {
-  const { EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS } = process.env;
-  if (!EMAIL_USER || !EMAIL_PASS) return null;
+  const { host, port, user, pass } = smtpConfig();
+  if (!user || !pass) return null;
 
   return nodemailer.createTransport({
-    host: EMAIL_HOST || 'smtp.gmail.com',
-    port: Number(EMAIL_PORT) || 587,
-    secure: Number(EMAIL_PORT) === 465, // 465 dùng SSL, còn lại STARTTLS
-    auth: { user: EMAIL_USER, pass: EMAIL_PASS },
+    host,
+    port,
+    secure: port === 465, // 465 dùng SSL, còn lại STARTTLS
+    auth: { user, pass },
   });
 }
 
@@ -44,7 +58,7 @@ async function sendVerificationEmail(to, name, token) {
     return;
   }
 
-  const from = process.env.EMAIL_FROM || `POSTA <${process.env.EMAIL_USER}>`;
+  const from = mailFrom();
   const verifyUrl = `${getFrontendUrl()}/verify-email?token=${token}`;
 
   await transporter.sendMail({
@@ -77,7 +91,7 @@ async function sendWelcomeEmail(to, name) {
   const transporter = createTransporter();
   if (!transporter) return;
 
-  const from = process.env.EMAIL_FROM || `POSTA <${process.env.EMAIL_USER}>`;
+  const from = mailFrom();
   const loginUrl = `${getFrontendUrl()}/login`;
 
   await transporter.sendMail({
@@ -108,7 +122,7 @@ async function sendResetPasswordEmail(to, name, token) {
     return;
   }
 
-  const from = process.env.EMAIL_FROM || `POSTA <${process.env.EMAIL_USER}>`;
+  const from = mailFrom();
   const resetUrl = `${getFrontendUrl()}/reset-password?token=${token}`;
 
   await transporter.sendMail({

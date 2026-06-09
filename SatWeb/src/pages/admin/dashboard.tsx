@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
 import {
   Users,
   UserCheck,
@@ -7,7 +6,6 @@ import {
   TrendingUp,
   FileText,
   Globe,
-  ArrowRight,
   Loader2,
 } from "lucide-react";
 import useAdminStore from "@/store/adminStore";
@@ -39,18 +37,9 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Bảng điều khiển quản trị</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Tổng quan người dùng & doanh thu POSTA.</p>
-          </div>
-          <Link
-            to="/admin/users"
-            className="inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-transform duration-200 hover:scale-[1.02]"
-          >
-            Quản lý người dùng
-            <ArrowRight className="size-4" />
-          </Link>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Bảng điều khiển quản trị</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Tổng quan người dùng & doanh thu POSTA.</p>
         </div>
 
         {loading && !stats ? (

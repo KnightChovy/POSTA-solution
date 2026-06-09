@@ -11,6 +11,7 @@ import {
   Moon,
   Sun,
   ShieldCheck,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -55,6 +56,12 @@ const Navigation = () => {
       path: "/viewSat",
       icon: <FolderKanban className="h-4 w-4" />,
       action: () => navigate("/viewSat"),
+    },
+    {
+      name: "Gói dịch vụ",
+      path: "/pricing",
+      icon: <CreditCard className="h-4 w-4" />,
+      action: () => navigate("/pricing"),
     },
     {
       name: "Hướng dẫn",

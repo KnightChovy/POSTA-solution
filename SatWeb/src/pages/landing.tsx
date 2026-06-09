@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useThemeStore } from "@/store/themeStore";
 import { useAuthStore } from "@/store/authStore";
+import PricingSection from "@/components/landing/PricingSection";
 
 const POSTA_LOGO = "/logo-3.png";
 const POSTA_COVER = "/cover-posta.jpg";
@@ -276,6 +277,9 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      {/* ===== BẢNG GIÁ ===== */}
+      <PricingSection />
 
       {/* ===== FAQ ===== */}
       <section className="mx-auto max-w-3xl px-4 py-16 sm:px-6">

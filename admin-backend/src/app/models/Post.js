@@ -27,7 +27,8 @@ const Post = new mongoose.Schema({
   imagePath: {
     type: [String],
     required: false,
-  }
+  },
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'user' }, // chủ sở hữu (đếm quota bài đăng theo user)
 }, {
   timestamps: true
 })
