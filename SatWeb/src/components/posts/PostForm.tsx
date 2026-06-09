@@ -28,6 +28,10 @@ import { checkSitesFast } from "@/lib/utils";
 import useSeoStore from "@/store/seoStore";
 import SeoPanel from "@/components/posts/SeoPanel";
 
+// Key TinyMCE (cloud) đọc từ env -> dùng key của bạn, đổi domain/khoá không phải
+// sửa code. Set trong SatWeb/.env (local) và Environment trên Vercel (production).
+const TINYMCE_API_KEY = import.meta.env.VITE_TINYMCE_API_KEY as string;
+
 const formSchema = z.object({
   title: z
     .string()
@@ -395,7 +399,7 @@ const PostForm = ({
                   <FormLabel>Nội dung</FormLabel>
                   <FormControl>
                     <Editor
-                      apiKey="de7eylucb6hopyd8di8ruii0oabt5ylm78zmnnw9dgahz07g"
+                      apiKey={TINYMCE_API_KEY}
                       value={field.value}
                       onEditorChange={(v) => field.onChange(v)}
                       init={{
@@ -403,8 +407,7 @@ const PostForm = ({
                         menubar: true,
                         width: "100%",
                         language: "vi",
-                        language_url:
-                          "https://cdn.tiny.cloud/1/de7eylucb6hopyd8di8ruii0oabt5ylm78zmnnw9dgahz07g/tinymce/8/langs/vi.js",
+                        language_url: `https://cdn.tiny.cloud/1/${TINYMCE_API_KEY}/tinymce/8/langs/vi.js`,
                         plugins: [
                           "advlist",
                           "autolink",
