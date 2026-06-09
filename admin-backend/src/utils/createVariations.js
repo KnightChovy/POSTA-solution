@@ -214,4 +214,133 @@ const generateCampaignContent = async (input) => {
   }
 };
 
-module.exports = { createVariations, generateCampaignContent };
+// --- Social paraphrase pipeline (n8n -> Express -> AI) ---------------------
+// n8n calls this to turn one source article into a fresh, platform-native post.
+// Each platform gets a DIFFERENT rewrite so the same content is not duplicated
+// verbatim across channels (avoids duplicate-content / SEO penalties).
+
+const SOCIAL_PLATFORMS = {
+  twitter: { label: "Twitter/X", maxChars: 280, hashtagCount: 3 },
+  x: { label: "Twitter/X", maxChars: 280, hashtagCount: 3 },
+  threads: { label: "Threads", maxChars: 500, hashtagCount: 5 },
+  facebook: { label: "Facebook", maxChars: 2000, hashtagCount: 5 },
+  linkedin: { label: "LinkedIn", maxChars: 2000, hashtagCount: 5 },
+};
+
+const DEFAULT_PLATFORM = { label: "social media", maxChars: 1000, hashtagCount: 5 };
+
+/** Strip HTML tags/entities so the model paraphrases plain prose, not markup. */
+const stripHtml = (html = "") =>
+  String(html)
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&[a-z]+;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+/** Hard cap the final post so it can never exceed the platform limit. */
+const truncate = (text, max) =>
+  text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`;
+
+/**
+ * Paraphrase a source article into one platform-native social post.
+ * Returns { platform, text, hashtags, charCount } where `text` is ready to post
+ * (paraphrased body + hashtags appended, already within the char limit).
+ *
+ * Throws errors tagged with `code` so the controller maps them to HTTP status:
+ *   AI_CONFIG_MISSING | AI_REQUEST_FAILED | AI_EMPTY | AI_INVALID_JSON
+ */
+const paraphraseForSocial = async ({
+  content,
+  platform = "twitter",
+  language = "vi",
+  tone = "professional",
+}) => {
+  const client = getAiClient();
+  const key = String(platform).toLowerCase();
+  const cfg = SOCIAL_PLATFORMS[key] || DEFAULT_PLATFORM;
+  const source = stripHtml(content);
+
+  const system = [
+    `You are an expert social-media copywriter for ${cfg.label}.`,
+    "You ALWAYS reply with a single valid JSON object and nothing else.",
+    "No Markdown, no code fences, no explanations.",
+  ].join(" ");
+
+  const user = `
+Rewrite (paraphrase) the source article below into ONE fresh ${cfg.label} post.
+
+HARD RULES:
+- Write in language "${language}" with a ${tone} tone.
+- Completely rephrase — different wording and sentence structure from the source,
+  but keep the same core facts and message. Do NOT copy sentences verbatim
+  (this post must not duplicate the original for SEO reasons).
+- The "text" field MUST be at most ${cfg.maxChars} characters INCLUDING hashtags.
+- Add up to ${cfg.hashtagCount} relevant hashtags at the end of "text".
+- Native style for ${cfg.label}: hook first, concise, engaging.
+- Do not invent prices, links or facts that are not in the source.
+
+SOURCE ARTICLE:
+"""
+${source}
+"""
+
+Return JSON EXACTLY in this shape:
+{ "text": "the full post including hashtags", "hashtags": ["#tag1", "#tag2"] }
+`.trim();
+
+  let completion;
+  try {
+    completion = await client.chat.completions.create({
+      model: AI_MODEL,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.9,
+    });
+  } catch (error) {
+    const err = new Error(`AI request failed: ${error.message}`);
+    err.code = "AI_REQUEST_FAILED";
+    throw err;
+  }
+
+  const raw = completion?.choices?.[0]?.message?.content;
+  if (!raw) {
+    const err = new Error("AI returned an empty response");
+    err.code = "AI_EMPTY";
+    throw err;
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(extractJson(raw));
+  } catch (error) {
+    const err = new Error("AI returned invalid JSON");
+    err.code = "AI_INVALID_JSON";
+    throw err;
+  }
+
+  const text = truncate(String(parsed.text || "").trim(), cfg.maxChars);
+  const hashtags = Array.isArray(parsed.hashtags) ? parsed.hashtags : [];
+
+  return {
+    platform: key,
+    text,
+    hashtags,
+    charCount: text.length,
+    maxChars: cfg.maxChars,
+  };
+};
+
+module.exports = {
+  createVariations,
+  generateCampaignContent,
+  paraphraseForSocial,
+};

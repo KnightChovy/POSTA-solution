@@ -8,8 +8,40 @@ services:
     volumes:
       - posta-mongo-data:/data/db
 
+  # n8n orchestrates the social-publishing workflow:
+  #   Webhook -> HTTP call to the Express backend (/api/social/paraphrase)
+  #   -> post the paraphrased text to the social platform (Twitter/X first).
+  # The Express backend runs on the HOST (nodemon, port 3000), so inside the
+  # workflow call it as http://host.docker.internal:3000/api/social/paraphrase
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: posta-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      # Basic auth for the n8n editor UI (change these!)
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-changeme}
+      # Public URL n8n uses to build webhook links
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=Asia/Ho_Chi_Minh
+      - TZ=Asia/Ho_Chi_Minh
+    volumes:
+      - n8n-data:/home/node/.n8n
+    extra_hosts:
+      # Lets the container reach the host-run Express backend on Linux too
+      # (Docker Desktop on Windows/Mac resolves host.docker.internal natively).
+      - "host.docker.internal:host-gateway"
+
 volumes:
   posta-mongo-data:
     name: posta-mongo-data
     external: true
+  n8n-data:
+    name: posta-n8n-data
 

@@ -44,6 +44,17 @@ const campaignSchema = z.object({
   cta: z.string().optional().default(""),
 });
 
+/**
+ * Validates the social paraphrase request body (n8n -> Express).
+ * One source article -> one platform-native paraphrased post.
+ */
+const socialParaphraseSchema = z.object({
+  content: z.string().min(1, "content is required"),
+  platform: z.string().min(1).default("twitter"),
+  language: z.string().default("vi"),
+  tone: z.string().optional().default("professional"),
+});
+
 const variationSchema = z.object({
   platform: z.string(),
   title: z.string(),
@@ -76,11 +87,14 @@ const formatZodError = (error) =>
 
 const validateCampaignInput = (data) => campaignSchema.safeParse(data);
 const validateAiOutput = (data) => aiOutputSchema.safeParse(data);
+const validateSocialParaphrase = (data) => socialParaphraseSchema.safeParse(data);
 
 module.exports = {
   campaignSchema,
   aiOutputSchema,
+  socialParaphraseSchema,
   validateCampaignInput,
   validateAiOutput,
+  validateSocialParaphrase,
   formatZodError,
 };
