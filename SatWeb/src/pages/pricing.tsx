@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Globe, Bot, FileText, Loader2, ArrowLeft, Receipt } from "lucide-react";
 import usePlanStore, { PaymentInfo, Plan } from "@/store/planStore";
+import useProfileStore from "@/store/profileStore";
 import { formatVND, limitText, usagePercent, usageText } from "@/lib/planFormat";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,8 @@ const PricingPage = () => {
   const navigate = useNavigate();
   const { plans, subscription, transactions, getPlans, getSubscription, getTransactions, purchasePlan } =
     usePlanStore();
+  const { profile, getProfile } = useProfileStore();
+  const isAdmin = !!profile?.isAdmin; // admin chỉ được xem gói, không được mua
   const [payment, setPayment] = useState<PaymentInfo | null>(null);
   const [buying, setBuying] = useState<string | null>(null);
   const pollRef = useRef<number | null>(null);
@@ -56,7 +59,8 @@ const PricingPage = () => {
     getPlans();
     getSubscription();
     getTransactions();
-  }, [getPlans, getSubscription, getTransactions]);
+    if (!profile) getProfile();
+  }, [getPlans, getSubscription, getTransactions, getProfile, profile]);
 
   const currentKey = subscription?.plan?.key;
   // Giá gói hiện tại để so sánh: chỉ cho NÂNG CẤP (gói đắt hơn), khoá các gói thấp hơn/bằng.
@@ -80,6 +84,8 @@ const PricingPage = () => {
   }, [payment, getSubscription, getTransactions]);
 
   const handleBuy = async (plan: Plan) => {
+    // Admin chỉ được xem, không mua gói.
+    if (isAdmin) return;
     // Chỉ cho nâng cấp lên gói cao hơn — chặn gói hiện tại & gói thấp hơn/bằng.
     if (plan.key === currentKey || plan.price <= currentPrice) return;
     setBuying(plan.key);
@@ -105,7 +111,9 @@ const PricingPage = () => {
       </button>
 
       <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Gói dịch vụ</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Quản lý gói hiện tại và nâng cấp khi cần.</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {isAdmin ? "Tài khoản quản trị chỉ xem thông tin gói, không thể mua." : "Quản lý gói hiện tại và nâng cấp khi cần."}
+      </p>
 
       {/* Gói hiện tại + quota */}
       {subscription && (
@@ -168,13 +176,13 @@ const PricingPage = () => {
               </ul>
               <Button
                 onClick={() => handleBuy(p)}
-                disabled={isCurrent || isLower || buying === p.key}
+                disabled={isAdmin || isCurrent || isLower || buying === p.key}
                 variant={isUpgrade ? "default" : "outline"}
                 className="mt-6 w-full cursor-pointer"
-                title={isLower ? "Không thể hạ xuống gói thấp hơn" : undefined}
+                title={isAdmin ? "Tài khoản quản trị không thể mua gói" : isLower ? "Không thể hạ xuống gói thấp hơn" : undefined}
               >
                 {buying === p.key && <Loader2 className="size-4 animate-spin" />}
-                {isCurrent ? "Gói hiện tại" : isLower ? "Gói thấp hơn" : "Nâng cấp"}
+                {isAdmin ? "Chỉ xem" : isCurrent ? "Gói hiện tại" : isLower ? "Gói thấp hơn" : "Nâng cấp"}
               </Button>
             </div>
           );
@@ -190,9 +198,9 @@ const PricingPage = () => {
           {transactions.length === 0 ? (
             <p className="px-6 py-8 text-center text-sm text-muted-foreground">Chưa có giao dịch nào.</p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="max-h-[26rem] overflow-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="sticky top-0 z-10 bg-card">
                   <tr className="border-b border-border text-left text-xs uppercase text-muted-foreground">
                     <th className="px-4 py-3 font-medium">Thời gian</th>
                     <th className="px-4 py-3 font-medium">Gói</th>
