@@ -9,7 +9,7 @@ const Transaction = new Schema({
   plan: { type: String, required: true }, // key của Plan
   planName: { type: String, default: '' },
   amount: { type: Number, required: true }, // VND
-  status: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
+  status: { type: String, enum: ['pending', 'paid', 'failed', 'cancelled'], default: 'pending' },
   provider: { type: String, enum: ['sepay', 'mock', 'manual'], default: 'sepay' },
   reference: { type: String, index: true }, // mã đối soát ghi trong nội dung chuyển khoản
   providerTxId: { type: String, default: '' }, // id giao dịch bên SePay (đối soát/audit)

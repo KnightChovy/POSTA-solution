@@ -3,6 +3,7 @@ const Plan = require('../app/models/Plan');
 const Satellite = require('../app/models/Satellite');
 const Post = require('../app/models/Post');
 const Transaction = require('../app/models/Transaction');
+const { sendPlanActivatedEmail } = require('./mailer');
 
 // Mốc bắt đầu kỳ hiện tại theo loại kỳ (để đếm/đặt lại quota).
 function startOfPeriod(period, now = new Date()) {
@@ -37,6 +38,13 @@ async function activatePlanByTransaction(tx) {
     user.plan = tx.plan;
     user.usage = { aiCount: 0, periodStart: new Date() }; // bắt đầu kỳ mới
     await user.save();
+
+    // Gửi email thông báo đăng ký gói thành công (best-effort, không chặn kích hoạt).
+    try {
+      await sendPlanActivatedEmail(user.email, user.name, tx.planName || tx.plan, tx.amount);
+    } catch (e) {
+      console.error('[subscription] sendPlanActivatedEmail:', e.message);
+    }
   }
   return tx;
 }

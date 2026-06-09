@@ -69,4 +69,29 @@ const devConfirm = async (req, res) => {
   }
 };
 
-module.exports = { sepayWebhook, devConfirm };
+// GET /api/payment/history — lịch sử giao dịch của chính user đang đăng nhập.
+const getMyTransactions = async (req, res) => {
+  try {
+    const txs = await Transaction.find({ user: req.user.id }).sort({ createdAt: -1 });
+    return res.json({
+      error: false,
+      transactions: txs.map((t) => ({
+        id: t._id,
+        plan: t.plan,
+        planName: t.planName || t.plan,
+        amount: t.amount,
+        paidAmount: t.paidAmount ?? null,
+        status: t.status,
+        provider: t.provider,
+        reference: t.reference,
+        paidAt: t.paidAt || null,
+        createdAt: t.createdAt,
+      })),
+    });
+  } catch (error) {
+    console.error('[payment] getMyTransactions error:', error);
+    return res.status(500).json({ error: true, message: 'Lỗi máy chủ, vui lòng thử lại' });
+  }
+};
+
+module.exports = { sepayWebhook, devConfirm, getMyTransactions };

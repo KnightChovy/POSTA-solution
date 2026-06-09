@@ -9,10 +9,15 @@ const cors = require("cors");
 require('dotenv').config();
 const mongoDB = require('./config/db/mongoDB')
 const { seedPlans } = require('./config/db/seedPlans')
+const { startCancelStalePaymentsJob } = require('./utils/paymentJobs')
 const app = express();
 
-// Kết nối DB xong thì seed gói dịch vụ mặc định (chỉ chạy khi collection rỗng).
-mongoDB.connect().then(() => seedPlans())
+// Kết nối DB xong thì seed gói dịch vụ mặc định (chỉ chạy khi collection rỗng)
+// và bật job tự hủy giao dịch chờ thanh toán quá hạn.
+mongoDB.connect().then(() => {
+  seedPlans();
+  startCancelStalePaymentsJob();
+})
 
 app.use(cookieParser());
 

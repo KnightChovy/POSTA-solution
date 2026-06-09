@@ -155,4 +155,40 @@ async function sendResetPasswordEmail(to, name, token) {
   });
 }
 
-module.exports = { sendVerificationEmail, sendWelcomeEmail, sendResetPasswordEmail };
+/** Gửi email thông báo đăng ký/kích hoạt gói thành công. Không chặn luồng nếu lỗi. */
+async function sendPlanActivatedEmail(to, name, planName, amount) {
+  const transporter = createTransporter();
+  if (!transporter) {
+    console.warn('[mailer] Chưa cấu hình EMAIL_USER/EMAIL_PASS — bỏ qua gửi email kích hoạt gói.');
+    return;
+  }
+
+  const from = mailFrom();
+  const pricingUrl = `${getFrontendUrl()}/pricing`;
+  const amountText = Number(amount) > 0 ? `${Number(amount).toLocaleString('vi-VN')}đ` : 'Miễn phí';
+
+  await transporter.sendMail({
+    from,
+    to,
+    subject: `Đăng ký gói ${planName} thành công 🎉`,
+    html: wrapEmail(`
+      <p style="font-size: 16px;">Xin chào <strong>${name}</strong>,</p>
+      <p style="font-size: 15px; line-height: 1.6;">
+        Bạn đã <strong>đăng ký gói ${planName}</strong> thành công trên POSTA. Cảm ơn bạn đã tin dùng!
+      </p>
+      <table style="width:100%; border-collapse:collapse; margin: 16px 0; font-size:14px;">
+        <tr><td style="padding:6px 0; color:#777;">Gói dịch vụ</td><td style="padding:6px 0; text-align:right; font-weight:700;">${planName}</td></tr>
+        <tr><td style="padding:6px 0; color:#777;">Số tiền</td><td style="padding:6px 0; text-align:right; font-weight:700;">${amountText}</td></tr>
+      </table>
+      <p style="text-align: center; margin: 28px 0;">
+        <a href="${pricingUrl}"
+           style="background: #FF6B00; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 10px; font-weight: 700; display: inline-block;">
+          Xem gói của tôi
+        </a>
+      </p>
+      <p style="font-size: 13px; color: #777;">Nếu đây không phải bạn thực hiện, vui lòng liên hệ hỗ trợ ngay.</p>
+    `),
+  });
+}
+
+module.exports = { sendVerificationEmail, sendWelcomeEmail, sendResetPasswordEmail, sendPlanActivatedEmail };
