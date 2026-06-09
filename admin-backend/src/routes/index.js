@@ -11,7 +11,12 @@ const authenticateJWT = require("../middleware/AuthenticateJWT");
 function routes(app) {
   // Public: đăng nhập / đăng ký / xác thực / refresh token
   app.use("/api/auth", auth);
-
+  app.use("/api/satellite", satellite);
+  app.use("/api/category", category);
+  app.use('/api/auth/login', login)
+  app.use("/api/image", image);
+  app.use("/api/post", post);
+  app.use("/api/social", social);
   // Gói dịch vụ: GET công khai, mua/subscription tự gắn JWT bên trong
   app.use("/api/plans", plan);
 
