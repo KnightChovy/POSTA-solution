@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Globe, Bot, FileText, Loader2, ArrowLeft } from "lucide-react";
+import { Globe, Bot, FileText, Loader2, ArrowLeft, Receipt } from "lucide-react";
 import usePlanStore, { PaymentInfo, Plan } from "@/store/planStore";
 import { formatVND, limitText, usagePercent, usageText } from "@/lib/planFormat";
 import { cn } from "@/lib/utils";
@@ -22,9 +22,32 @@ const QuotaBar = ({ label, icon: Icon, used, limit }: { label: string; icon: any
   </div>
 );
 
+// Định dạng ngày giờ kiểu Việt Nam.
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+// Nhãn trạng thái giao dịch.
+const StatusBadge = ({ status }: { status: string }) => {
+  const map: Record<string, { text: string; cls: string }> = {
+    paid: { text: "Đã thanh toán", cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" },
+    pending: { text: "Chờ thanh toán", cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" },
+    failed: { text: "Thất bại", cls: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300" },
+    cancelled: { text: "Đã hủy", cls: "bg-secondary text-muted-foreground" },
+  };
+  const s = map[status] || { text: status, cls: "bg-secondary text-foreground" };
+  return <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${s.cls}`}>{s.text}</span>;
+};
+
 const PricingPage = () => {
   const navigate = useNavigate();
-  const { plans, subscription, getPlans, getSubscription, purchasePlan } = usePlanStore();
+  const { plans, subscription, transactions, getPlans, getSubscription, getTransactions, purchasePlan } =
+    usePlanStore();
   const [payment, setPayment] = useState<PaymentInfo | null>(null);
   const [buying, setBuying] = useState<string | null>(null);
   const pollRef = useRef<number | null>(null);
@@ -32,7 +55,8 @@ const PricingPage = () => {
   useEffect(() => {
     getPlans();
     getSubscription();
-  }, [getPlans, getSubscription]);
+    getTransactions();
+  }, [getPlans, getSubscription, getTransactions]);
 
   const currentKey = subscription?.plan?.key;
   // Giá gói hiện tại để so sánh: chỉ cho NÂNG CẤP (gói đắt hơn), khoá các gói thấp hơn/bằng.
@@ -45,14 +69,15 @@ const PricingPage = () => {
       await getSubscription();
       const pending = usePlanStore.getState().subscription?.pending;
       if (!pending) {
-        // Đã thanh toán xong (pending biến mất) → đóng dialog.
+        // Đã thanh toán xong (pending biến mất) → đóng dialog + làm mới lịch sử.
         setPayment(null);
+        getTransactions();
       }
     }, 4000);
     return () => {
       if (pollRef.current) window.clearInterval(pollRef.current);
     };
-  }, [payment, getSubscription]);
+  }, [payment, getSubscription, getTransactions]);
 
   const handleBuy = async (plan: Plan) => {
     // Chỉ cho nâng cấp lên gói cao hơn — chặn gói hiện tại & gói thấp hơn/bằng.
@@ -108,7 +133,7 @@ const PricingPage = () => {
 
       {/* Danh sách gói */}
       <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {plans.map((p) => {
+        {[...plans].sort((a, b) => a.price - b.price).map((p) => {
           const isCurrent = p.key === currentKey;
           const isUpgrade = !isCurrent && p.price > currentPrice; // gói cao hơn → cho nâng cấp
           const isLower = !isCurrent && p.price <= currentPrice; // gói thấp hơn/bằng → khoá
@@ -154,6 +179,43 @@ const PricingPage = () => {
             </div>
           );
         })}
+      </div>
+
+      {/* Lịch sử thanh toán */}
+      <div className="mt-10">
+        <h2 className="flex items-center gap-2 text-lg font-bold text-foreground">
+          <Receipt className="size-5 text-primary" /> Lịch sử thanh toán
+        </h2>
+        <div className="mt-4 overflow-hidden rounded-2xl border border-primary/15 bg-card shadow-sm">
+          {transactions.length === 0 ? (
+            <p className="px-6 py-8 text-center text-sm text-muted-foreground">Chưa có giao dịch nào.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left text-xs uppercase text-muted-foreground">
+                    <th className="px-4 py-3 font-medium">Thời gian</th>
+                    <th className="px-4 py-3 font-medium">Gói</th>
+                    <th className="px-4 py-3 text-right font-medium">Số tiền</th>
+                    <th className="px-4 py-3 text-right font-medium">Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.map((t) => (
+                    <tr key={t.id} className="border-b border-border/60 last:border-0">
+                      <td className="px-4 py-3 text-muted-foreground">{formatDate(t.createdAt)}</td>
+                      <td className="px-4 py-3 font-medium text-foreground">{t.planName}</td>
+                      <td className="px-4 py-3 text-right font-semibold text-foreground">{formatVND(t.amount)}</td>
+                      <td className="px-4 py-3 text-right">
+                        <StatusBadge status={t.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Dialog thanh toán SePay */}

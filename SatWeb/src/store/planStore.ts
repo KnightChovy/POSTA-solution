@@ -44,12 +44,27 @@ export interface Subscription {
   pending: { reference: string; amount: number; planName: string; payment: PaymentInfo } | null;
 }
 
+export interface PaymentTransaction {
+  id: string;
+  plan: string;
+  planName: string;
+  amount: number;
+  paidAmount: number | null;
+  status: "pending" | "paid" | "failed" | "cancelled";
+  provider: string;
+  reference: string;
+  paidAt: string | null;
+  createdAt: string;
+}
+
 interface PlanStore {
   plans: Plan[];
   subscription: Subscription | null;
+  transactions: PaymentTransaction[];
   loading: boolean;
   getPlans: () => Promise<void>;
   getSubscription: () => Promise<void>;
+  getTransactions: () => Promise<void>;
   // Trả về thông tin thanh toán (nếu gói trả phí) hoặc null nếu miễn phí/lỗi.
   purchasePlan: (key: string) => Promise<{ free?: boolean; payment?: PaymentInfo } | null>;
   devConfirm: (reference: string) => Promise<boolean>;
@@ -58,6 +73,7 @@ interface PlanStore {
 const usePlanStore = create<PlanStore>((set, get) => ({
   plans: [],
   subscription: null,
+  transactions: [],
   loading: false,
 
   getPlans: async () => {
@@ -78,6 +94,15 @@ const usePlanStore = create<PlanStore>((set, get) => ({
       if (!res.data.error) set({ subscription: res.data.subscription });
     } catch (error: any) {
       console.error("Get subscription error:", error?.response?.data || error.message);
+    }
+  },
+
+  getTransactions: async () => {
+    try {
+      const res = await axios.get(`/api/payment/history`);
+      if (!res.data.error) set({ transactions: res.data.transactions ?? [] });
+    } catch (error: any) {
+      console.error("Get transactions error:", error?.response?.data || error.message);
     }
   },
 
