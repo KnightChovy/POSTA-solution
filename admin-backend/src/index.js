@@ -29,10 +29,15 @@ const allowedOrigins = (process.env.CLIENT_URL || "")
   .map((o) => o.trim().replace(/\/$/, "")) // bỏ "/" cuối để so khớp ổn định
   .filter(Boolean);
 
+// Vercel tạo URL preview riêng cho mỗi lần deploy (vd posta-solution-abc123.vercel.app).
+// Cho qua mọi subdomain *.vercel.app để khỏi phải thêm tay từng URL preview.
+const isVercelOrigin = (origin) => /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
+
 app.use(cors({
   origin: function (origin, callback) {
     // Không có origin = request server-to-server (webhook SePay, Postman) → cho qua.
-    if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ""))) {
+    const clean = origin ? origin.replace(/\/$/, "") : origin;
+    if (!origin || allowedOrigins.includes(clean) || isVercelOrigin(clean)) {
       return callback(null, true);
     }
     return callback(new Error(`CORS: origin không được phép - ${origin}`));
