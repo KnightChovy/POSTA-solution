@@ -1,0 +1,78 @@
+{
+  "name": "POSTA - Social Publish (Twitter)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "social-publish",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Manual Trigger (Webhook)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "social-publish"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3000/api/social/paraphrase",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content: $json.body.content, platform: $json.body.platform || 'twitter', language: $json.body.language || 'vi', tone: $json.body.tone || 'professional' }) }}",
+        "options": {}
+      },
+      "id": "paraphrase-call",
+      "name": "AI Paraphrase (Express)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "resource": "tweet",
+        "operation": "create",
+        "text": "={{ $json.text }}",
+        "additionalFields": {}
+      },
+      "id": "post-tweet",
+      "name": "Post to Twitter/X",
+      "type": "n8n-nodes-base.twitter",
+      "typeVersion": 2,
+      "position": [720, 300],
+      "credentials": {
+        "twitterOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "Twitter/X account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'published', platform: 'twitter', tweetId: $json.id, text: $('AI Paraphrase (Express)').item.json.text }) }}",
+        "options": {}
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [960, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger (Webhook)": {
+      "main": [[{ "node": "AI Paraphrase (Express)", "type": "main", "index": 0 }]]
+    },
+    "AI Paraphrase (Express)": {
+      "main": [[{ "node": "Post to Twitter/X", "type": "main", "index": 0 }]]
+    },
+    "Post to Twitter/X": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}

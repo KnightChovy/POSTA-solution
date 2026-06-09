@@ -1,0 +1,78 @@
+{
+  "info": {
+    "name": "POSTA admin-backend (MVP)",
+    "description": "Quick MVP test collection. Set {{baseUrl}} to http://localhost:3000. The core MVP endpoint is 'Generate & Publish'.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" }
+  ],
+  "item": [
+    {
+      "name": "Health check (GET /)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/", "host": ["{{baseUrl}}"], "path": [""] }
+      }
+    },
+    {
+      "name": "MVP - Generate & Publish (POST /api/post/generate-and-publish)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"campaignName\": \"Test Campaign - Can ho Quan 2\",\n  \"language\": \"vi\",\n  \"tone\": \"professional\",\n  \"cta\": \"Lien he ngay de nhan bao gia\",\n  \"property\": {\n    \"title\": \"Can ho cao cap 2PN view song\",\n    \"type\": \"Can ho\",\n    \"location\": \"Quan 2, TP.HCM\",\n    \"price\": \"5.2 ty\",\n    \"area\": \"75m2\",\n    \"bedrooms\": 2,\n    \"bathrooms\": 2,\n    \"description\": \"Can ho full noi that, view song Sai Gon, ban giao ngay.\"\n  },\n  \"media\": [\n    { \"url\": \"https://picsum.photos/800/600\", \"alt\": \"Anh can ho\" }\n  ],\n  \"targets\": [\n    { \"platform\": \"facebook\", \"wordpressSite\": \"main\", \"status\": \"draft\" }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/post/generate-and-publish",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "post", "generate-and-publish"]
+        }
+      }
+    },
+    {
+      "name": "Get all posts (GET /api/post)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/post", "host": ["{{baseUrl}}"], "path": ["api", "post"] }
+      }
+    },
+    {
+      "name": "Get all categories (GET /api/category)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/category", "host": ["{{baseUrl}}"], "path": ["api", "category"] }
+      }
+    },
+    {
+      "name": "Add category (POST /api/category)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"name\": \"Bat dong san\"\n}" },
+        "url": { "raw": "{{baseUrl}}/api/category", "host": ["{{baseUrl}}"], "path": ["api", "category"] }
+      }
+    },
+    {
+      "name": "Get all satellites (GET /api/satellite)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/satellite", "host": ["{{baseUrl}}"], "path": ["api", "satellite"] }
+      }
+    },
+    {
+      "name": "Login (POST /api/auth/login)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin\"\n}" },
+        "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+      }
+    }
+  ]
+}
