@@ -880,7 +880,7 @@ export const resources = {
       landing: {
         heroTitle: "Publish unlimited posts to hundreds of",
         heroAccent: "satellite websites",
-        heroPrice: "From 199,000đ/month. Cancel anytime.",
+        heroPrice: "From 299,000đ/month. Cancel anytime.",
         heroSub: "Ready to boost your SEO? Enter your email to create or sign in to your account.",
         emailPlaceholder: "Email address",
         trendingTitle: "Trending topics",
