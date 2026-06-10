@@ -1,4 +1,5 @@
 import { Suspense, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   useRoutes,
   Routes,
@@ -9,6 +10,7 @@ import {
 } from "react-router-dom";
 import Home from "./components/home";
 import Landing from "./pages/landing";
+import TopicDetail from "./pages/topic-detail";
 import ProgressPage from "./pages/progress";
 import CreatePost from "./pages/create-post";
 import LoginPage from "./pages/login";
@@ -39,6 +41,7 @@ function App() {
   const { isLoading } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Refresh token thất bại (hết hạn / không hợp lệ) → tự đăng xuất, về trang đăng nhập.
   useEffect(() => {
@@ -60,20 +63,22 @@ function App() {
   ];
   // Ẩn thanh điều hướng của user trên trang xác thực, landing và toàn bộ khu admin.
   const showNav =
-    !noNavRoutes.includes(location.pathname) && !location.pathname.startsWith("/admin");
+    !noNavRoutes.includes(location.pathname) &&
+    !location.pathname.startsWith("/admin") &&
+    !location.pathname.startsWith("/topics");
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Đang tải ứng dụng...</p>
+          <p className="text-muted-foreground">{t("nav.loadingApp")}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <Suspense fallback={<p>Đang tải...</p>}>
+    <Suspense fallback={<p>{t("nav.loading")}</p>}>
       {showNav && (
         <>
           <Navigation /> {/* Sidebar cho desktop */}
@@ -111,6 +116,8 @@ function App() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         {/* Landing page công khai — không cần đăng nhập */}
         <Route path="/" element={<Landing />} />
+        {/* Trang chi tiết chủ đề — công khai, không cần đăng nhập */}
+        <Route path="/topics/:seed" element={<TopicDetail />} />
         {/* Khu vực quản trị — chỉ admin, dùng layout sidebar riêng */}
         <Route
           path="/admin"

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -27,10 +28,10 @@ import { formatVND, usageText, usagePercent } from "@/lib/planFormat";
 const vndTime = (s: string) =>
   new Date(s).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
-const STATUS_META: Record<string, { label: string; cls: string }> = {
-  paid: { label: "Đã thanh toán", cls: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
-  pending: { label: "Chờ thanh toán", cls: "bg-amber-500/10 text-amber-600 dark:text-amber-400" },
-  failed: { label: "Đã huỷ", cls: "bg-destructive/10 text-destructive" },
+const STATUS_CLS: Record<string, string> = {
+  paid: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  pending: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  failed: "bg-destructive/10 text-destructive",
 };
 
 const InfoRow = ({ icon: Icon, label, value }: { icon: any; label: string; value?: string }) =>
@@ -43,10 +44,17 @@ const InfoRow = ({ icon: Icon, label, value }: { icon: any; label: string; value
   ) : null;
 
 export default function AdminUserDetail() {
+  const { t } = useTranslation();
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const { userDetail, loading, adminPlans, getUserDetail, getAdminPlans, changeUserPlan, confirmTransaction, cancelTransaction } =
     useAdminStore();
+
+  const STATUS_META: Record<string, { label: string; cls: string }> = {
+    paid: { label: t("admin.txPaid"), cls: STATUS_CLS.paid },
+    pending: { label: t("admin.txPending"), cls: STATUS_CLS.pending },
+    failed: { label: t("admin.txCancelled"), cls: STATUS_CLS.failed },
+  };
 
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -68,7 +76,7 @@ export default function AdminUserDetail() {
       </div>
     );
   }
-  if (!userDetail) return <div className="p-8 text-muted-foreground">Không tìm thấy người dùng.</div>;
+  if (!userDetail) return <div className="p-8 text-muted-foreground">{t("admin.userNotFound")}</div>;
 
   const { user, plan, usage, postCount, websiteCount, purchasedPlans, transactions } = userDetail;
   const isAdmin = user.isAdmin;
@@ -101,7 +109,7 @@ export default function AdminUserDetail() {
         onClick={() => navigate("/admin/users")}
         className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary cursor-pointer"
       >
-        <ArrowLeft className="size-4" /> Danh sách người dùng
+        <ArrowLeft className="size-4" /> {t("admin.userList")}
       </button>
 
       {/* Header */}
@@ -114,7 +122,7 @@ export default function AdminUserDetail() {
             <h1 className="truncate text-xl font-bold text-foreground">{user.name}</h1>
             {isAdmin && (
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
-                <ShieldCheck className="size-3" /> Quản trị viên
+                <ShieldCheck className="size-3" /> {t("admin.adminUser")}
               </span>
             )}
             <span
@@ -122,7 +130,7 @@ export default function AdminUserDetail() {
                 user.isActive ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-destructive/10 text-destructive"
               }`}
             >
-              {user.isActive ? "Hoạt động" : "Đã khoá"}
+              {user.isActive ? t("admin.statusActive") : t("admin.statusLocked")}
             </span>
           </div>
           <p className="text-sm text-muted-foreground">{user.email}</p>
@@ -133,16 +141,16 @@ export default function AdminUserDetail() {
         {/* Thông tin + thống kê */}
         <div className="flex flex-col gap-6 lg:col-span-1">
           <section className="rounded-xl border border-primary/15 bg-card p-6 shadow-sm">
-            <h2 className="mb-4 text-base font-bold text-foreground">Thông tin</h2>
+            <h2 className="mb-4 text-base font-bold text-foreground">{t("admin.information")}</h2>
             <div className="flex flex-col gap-3">
-              <InfoRow icon={Mail} label="Email" value={user.email} />
-              <InfoRow icon={Phone} label="SĐT" value={user.phone} />
-              <InfoRow icon={Briefcase} label="Chức danh" value={user.jobTitle} />
-              <InfoRow icon={Building2} label="Công ty" value={user.company} />
-              <InfoRow icon={Globe} label="Website" value={user.website} />
-              <InfoRow icon={MapPin} label="Địa chỉ" value={user.address} />
+              <InfoRow icon={Mail} label={t("admin.labelEmail")} value={user.email} />
+              <InfoRow icon={Phone} label={t("admin.labelPhone")} value={user.phone} />
+              <InfoRow icon={Briefcase} label={t("admin.labelJobTitle")} value={user.jobTitle} />
+              <InfoRow icon={Building2} label={t("admin.labelCompany")} value={user.company} />
+              <InfoRow icon={Globe} label={t("admin.labelWebsite")} value={user.website} />
+              <InfoRow icon={MapPin} label={t("admin.labelAddress")} value={user.address} />
               {!user.phone && !user.jobTitle && !user.company && !user.website && !user.address && (
-                <p className="text-sm text-muted-foreground">Chưa cập nhật thông tin bổ sung.</p>
+                <p className="text-sm text-muted-foreground">{t("admin.noExtraInfo")}</p>
               )}
             </div>
           </section>
@@ -151,7 +159,7 @@ export default function AdminUserDetail() {
             <div className="rounded-xl border border-primary/15 bg-card p-4 text-center shadow-sm">
               <FileText className="mx-auto mb-1 size-5 text-primary" />
               <p className="text-2xl font-extrabold text-foreground">{postCount}</p>
-              <p className="text-xs text-muted-foreground">Bài viết</p>
+              <p className="text-xs text-muted-foreground">{t("admin.posts")}</p>
             </div>
             <div className="rounded-xl border border-primary/15 bg-card p-4 text-center shadow-sm">
               <Globe className="mx-auto mb-1 size-5 text-primary" />
@@ -166,24 +174,24 @@ export default function AdminUserDetail() {
           {/* Gói hiện tại */}
           <section className="rounded-xl border border-primary/15 bg-card p-6 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-bold text-foreground">Gói dịch vụ</h2>
+              <h2 className="text-base font-bold text-foreground">{t("admin.servicePlan")}</h2>
               {!isAdmin && (
                 <Button onClick={openChange} size="sm" className="cursor-pointer gap-1.5">
-                  <RefreshCw className="size-3.5" /> Đổi gói
+                  <RefreshCw className="size-3.5" /> {t("admin.changePlan")}
                 </Button>
               )}
             </div>
 
             {isAdmin ? (
-              <p className="text-sm text-muted-foreground">Tài khoản quản trị không sử dụng gói dịch vụ.</p>
+              <p className="text-sm text-muted-foreground">{t("admin.adminNoServicePlan")}</p>
             ) : (
               <>
                 <p className="mb-4 text-lg font-bold text-primary">{plan.name}</p>
                 <div className="grid gap-4 sm:grid-cols-3">
                   {[
-                    { label: "Website", icon: Globe, ...usage.websites },
-                    { label: "Lần dùng AI", icon: Bot, ...usage.ai },
-                    { label: "Bài đăng", icon: FileText, ...usage.posts },
+                    { label: t("admin.labelWebsite"), icon: Globe, ...usage.websites },
+                    { label: t("admin.aiUsage"), icon: Bot, ...usage.ai },
+                    { label: t("admin.postUsage"), icon: FileText, ...usage.posts },
                   ].map((r) => (
                     <div key={r.label}>
                       <div className="mb-1 flex items-center justify-between text-sm">
@@ -201,7 +209,7 @@ export default function AdminUserDetail() {
                 {purchasedPlans.length > 0 && (
                   <div className="mt-4 border-t border-border pt-3">
                     <p className="text-xs text-muted-foreground">
-                      Gói đã mua: <span className="font-medium text-foreground">{purchasedPlans.join(", ")}</span>
+                      {t("admin.purchasedPlans")} <span className="font-medium text-foreground">{purchasedPlans.join(", ")}</span>
                     </p>
                   </div>
                 )}
@@ -211,38 +219,38 @@ export default function AdminUserDetail() {
 
           {/* Lịch sử giao dịch */}
           <section className="rounded-xl border border-primary/15 bg-card p-6 shadow-sm">
-            <h2 className="mb-4 text-base font-bold text-foreground">Lịch sử giao dịch ({transactions.length})</h2>
+            <h2 className="mb-4 text-base font-bold text-foreground">{t("admin.transactionHistory", { count: transactions.length })}</h2>
             {transactions.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Chưa có giao dịch nào.</p>
+              <p className="text-sm text-muted-foreground">{t("admin.noTransactions")}</p>
             ) : (
               <div className="flex flex-col divide-y divide-border">
-                {transactions.map((t) => {
-                  const meta = STATUS_META[t.status] || STATUS_META.pending;
+                {transactions.map((tx) => {
+                  const meta = STATUS_META[tx.status] || STATUS_META.pending;
                   return (
-                    <div key={t.id} className="flex flex-wrap items-center gap-3 py-3">
+                    <div key={tx.id} className="flex flex-wrap items-center gap-3 py-3">
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-foreground">
-                          {t.planName} <span className="text-xs font-normal text-muted-foreground">· {t.provider}</span>
+                          {tx.planName} <span className="text-xs font-normal text-muted-foreground">· {tx.provider}</span>
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {vndTime(t.createdAt)}
-                          {t.note && ` · ${t.note}`}
+                          {vndTime(tx.createdAt)}
+                          {tx.note && ` · ${tx.note}`}
                         </p>
                       </div>
-                      <span className="font-semibold text-primary">{formatVND(t.amount)}</span>
+                      <span className="font-semibold text-primary">{formatVND(tx.amount)}</span>
                       <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${meta.cls}`}>{meta.label}</span>
-                      {t.status === "pending" && (
+                      {tx.status === "pending" && (
                         <div className="flex gap-1">
                           <button
-                            onClick={() => handleConfirm(t.id)}
-                            title="Xác nhận đã nhận tiền"
+                            onClick={() => handleConfirm(tx.id)}
+                            title={t("admin.confirmPayment")}
                             className="cursor-pointer rounded-md p-1.5 text-emerald-600 hover:bg-emerald-500/10"
                           >
                             <Check className="size-4" />
                           </button>
                           <button
-                            onClick={() => handleCancel(t.id)}
-                            title="Huỷ giao dịch"
+                            onClick={() => handleCancel(tx.id)}
+                            title={t("admin.cancelTransaction")}
                             className="cursor-pointer rounded-md p-1.5 text-destructive hover:bg-destructive/10"
                           >
                             <X className="size-4" />
@@ -262,11 +270,11 @@ export default function AdminUserDetail() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Đổi gói cho {user.name}</DialogTitle>
+            <DialogTitle>{t("admin.changePlanFor", { name: user.name })}</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-4 pt-2">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="cp-plan">Gói mới</Label>
+              <Label htmlFor="cp-plan">{t("admin.newPlan")}</Label>
               <select
                 id="cp-plan"
                 value={form.plan}
@@ -282,11 +290,11 @@ export default function AdminUserDetail() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label>Hình thức</Label>
+              <Label>{t("admin.method")}</Label>
               <div className="flex gap-2">
                 {[
-                  { v: "paid", l: "Đã thanh toán" },
-                  { v: "gift", l: "Tặng / Khuyến mãi" },
+                  { v: "paid", l: t("admin.methodPaid") },
+                  { v: "gift", l: t("admin.methodGift") },
                 ].map((m) => (
                   <button
                     key={m.v}
@@ -302,25 +310,25 @@ export default function AdminUserDetail() {
               </div>
               <p className="text-xs text-muted-foreground">
                 {form.method === "paid"
-                  ? "Ghi nhận doanh thu theo giá gói (user đã chuyển khoản/trả tiền mặt)."
-                  : "Kích hoạt gói miễn phí, không tính vào doanh thu."}
+                  ? t("admin.methodPaidHint")
+                  : t("admin.methodGiftHint")}
               </p>
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="cp-note">Lý do (bắt buộc)</Label>
+              <Label htmlFor="cp-note">{t("admin.reasonRequired")}</Label>
               <Textarea
                 id="cp-note"
                 value={form.note}
                 onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
-                placeholder="VD: User chuyển khoản 299k ngày 04/06, hoặc tặng dùng thử..."
+                placeholder={t("admin.reasonPlaceholder")}
                 className="min-h-[72px] focus-visible:ring-primary"
               />
             </div>
 
             <Button onClick={handleSave} disabled={saving || !form.plan || !form.note.trim()} className="mt-1 w-full cursor-pointer gap-2">
               {saving && <Loader2 className="size-4 animate-spin" />}
-              Xác nhận đổi gói
+              {t("admin.confirmChangePlan")}
             </Button>
           </div>
         </DialogContent>

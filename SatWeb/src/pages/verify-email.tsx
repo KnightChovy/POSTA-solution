@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 import { Loader2, CheckCircle2, XCircle, Mail, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ type Status = "loading" | "success" | "error";
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
+  const { t } = useTranslation();
 
   const [status, setStatus] = useState<Status>("loading");
   const [message, setMessage] = useState("");
@@ -28,7 +30,7 @@ export default function VerifyEmailPage() {
 
     if (!token) {
       setStatus("error");
-      setMessage("Liên kết không hợp lệ — thiếu mã xác thực.");
+      setMessage(t("auth.invalidLinkMissingVerifyToken"));
       return;
     }
 
@@ -36,45 +38,45 @@ export default function VerifyEmailPage() {
       .then((res) => {
         if (res?.error) {
           setStatus("error");
-          setMessage(res.message || "Xác thực thất bại.");
+          setMessage(res.message || t("auth.verifyFailed"));
         } else {
           setStatus("success");
-          setMessage(res.message || "Xác thực email thành công!");
+          setMessage(res.message || t("auth.verifySuccess"));
         }
       })
       .catch(() => {
         setStatus("error");
-        setMessage("Có lỗi xảy ra, vui lòng thử lại.");
+        setMessage(t("auth.errorGeneric"));
       });
-  }, [token]);
+  }, [token, t]);
 
   const handleResend = async () => {
     if (!email) {
-      toast.error("Vui lòng nhập email để gửi lại.");
+      toast.error(t("auth.enterEmailToResend"));
       return;
     }
     setResending(true);
     try {
       const res = await resendVerificationService(email);
       if (res?.error) {
-        toast.error(res.message || "Gửi lại thất bại.");
+        toast.error(res.message || t("auth.resendFailed"));
       } else {
-        toast.success(res.message || "Đã gửi lại email xác thực.");
+        toast.success(res.message || t("auth.resendSuccessShort"));
       }
     } catch {
-      toast.error("Có lỗi xảy ra, vui lòng thử lại.");
+      toast.error(t("auth.errorGeneric"));
     } finally {
       setResending(false);
     }
   };
 
   return (
-    <AuthShell title="Xác thực email" subtitle="Kích hoạt tài khoản POSTA của bạn">
+    <AuthShell title={t("auth.verifyTitle")} subtitle={t("auth.verifySubtitle")}>
       <div className="flex flex-col items-center gap-5 rounded-xl border border-primary/15 bg-card p-8 text-center shadow-sm">
         {status === "loading" && (
           <>
             <Loader2 className="size-12 animate-spin text-primary" />
-            <p className="font-semibold text-foreground">Đang xác thực...</p>
+            <p className="font-semibold text-foreground">{t("auth.verifying")}</p>
           </>
         )}
 
@@ -84,12 +86,12 @@ export default function VerifyEmailPage() {
               <CheckCircle2 className="size-7" />
             </span>
             <div>
-              <p className="text-lg font-bold text-foreground">Thành công!</p>
+              <p className="text-lg font-bold text-foreground">{t("auth.success")}</p>
               <p className="mt-1 text-sm text-muted-foreground">{message}</p>
             </div>
             <Button asChild className="w-full cursor-pointer gap-2">
               <Link to="/login">
-                Đăng nhập ngay
+                {t("auth.loginNow")}
                 <ArrowRight className="size-4" />
               </Link>
             </Button>
@@ -102,20 +104,20 @@ export default function VerifyEmailPage() {
               <XCircle className="size-7" />
             </span>
             <div>
-              <p className="text-lg font-bold text-foreground">Không xác thực được</p>
+              <p className="text-lg font-bold text-foreground">{t("auth.verifyError")}</p>
               <p className="mt-1 text-sm text-muted-foreground">{message}</p>
             </div>
 
             {/* Gửi lại email xác thực */}
             <div className="flex w-full flex-col gap-3 border-t border-border pt-5">
-              <p className="text-sm text-muted-foreground">Gửi lại email xác thực:</p>
+              <p className="text-sm text-muted-foreground">{t("auth.resendVerificationLabel")}</p>
               <div className="relative flex items-center">
                 <Mail className="absolute left-3 size-4 text-muted-foreground" />
                 <Input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Nhập email đã đăng ký"
+                  placeholder={t("auth.registeredEmailPlaceholder")}
                   className="h-11 pl-10 focus-visible:ring-primary"
                 />
               </div>
@@ -125,13 +127,13 @@ export default function VerifyEmailPage() {
                 className="h-11 w-full cursor-pointer gap-2"
               >
                 {resending && <Loader2 className="size-4 animate-spin" />}
-                Gửi lại email xác thực
+                {t("auth.resendVerification")}
               </Button>
               <Link
                 to="/login"
                 className="text-sm font-semibold text-primary hover:underline"
               >
-                Quay lại đăng nhập
+                {t("auth.backToLogin")}
               </Link>
             </div>
           </>

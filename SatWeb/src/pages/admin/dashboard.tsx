@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Users,
   UserCheck,
@@ -17,6 +18,7 @@ const monthLabel = (m: string) => {
 };
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
   const { stats, loading, getStats } = useAdminStore();
 
   useEffect(() => {
@@ -25,10 +27,10 @@ export default function AdminDashboard() {
 
   const cards = stats
     ? [
-        { label: "Tổng người dùng", value: stats.totalUsers, icon: Users, hint: `+${stats.newUsersThisMonth} tháng này` },
-        { label: "Đang hoạt động", value: stats.activeUsers, icon: UserCheck, hint: `${stats.verifiedUsers} đã xác thực` },
-        { label: "Doanh thu/tháng (MRR)", value: vnd(stats.mrr), icon: Wallet, hint: "Từ gói đang hoạt động" },
-        { label: "Tổng doanh thu", value: vnd(stats.totalRevenue), icon: TrendingUp, hint: "Tất cả giao dịch" },
+        { label: t("admin.totalUsers"), value: stats.totalUsers, icon: Users, hint: t("admin.newUsersThisMonth", { count: stats.newUsersThisMonth }) },
+        { label: t("admin.activeUsers"), value: stats.activeUsers, icon: UserCheck, hint: t("admin.verifiedCount", { count: stats.verifiedUsers }) },
+        { label: t("admin.mrr"), value: vnd(stats.mrr), icon: Wallet, hint: t("admin.fromActivePlans") },
+        { label: t("admin.totalRevenue"), value: vnd(stats.totalRevenue), icon: TrendingUp, hint: t("admin.allTransactions") },
       ]
     : [];
 
@@ -38,8 +40,8 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-background">
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Bảng điều khiển quản trị</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Tổng quan người dùng & doanh thu POSTA.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("admin.dashboardTitle")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t("admin.dashboardSubtitle")}</p>
         </div>
 
         {loading && !stats ? (
@@ -69,7 +71,7 @@ export default function AdminDashboard() {
             <div className="grid gap-6 lg:grid-cols-3">
               {/* Biểu đồ doanh thu */}
               <div className="rounded-xl border border-primary/15 bg-card p-6 shadow-sm lg:col-span-2">
-                <h2 className="mb-5 text-base font-bold text-foreground">Doanh thu 6 tháng gần nhất</h2>
+                <h2 className="mb-5 text-base font-bold text-foreground">{t("admin.revenueLast6Months")}</h2>
                 <div className="flex h-48 items-end justify-between gap-3">
                   {stats.revenueByMonth.map((r) => (
                     <div key={r.month} className="flex flex-1 flex-col items-center gap-2">
@@ -88,7 +90,7 @@ export default function AdminDashboard() {
 
               {/* Người dùng theo gói */}
               <div className="rounded-xl border border-primary/15 bg-card p-6 shadow-sm">
-                <h2 className="mb-5 text-base font-bold text-foreground">Người dùng theo gói</h2>
+                <h2 className="mb-5 text-base font-bold text-foreground">{t("admin.usersByPlan")}</h2>
                 <ul className="flex flex-col gap-3">
                   {Object.entries(stats.usersByPlan).map(([plan, count]) => (
                     <li key={plan} className="flex items-center justify-between text-sm">
@@ -98,13 +100,13 @@ export default function AdminDashboard() {
                   ))}
                   <li className="mt-2 flex items-center justify-between border-t border-border pt-3 text-sm">
                     <span className="flex items-center gap-1.5 text-muted-foreground">
-                      <FileText className="size-3.5" /> Bài viết
+                      <FileText className="size-3.5" /> {t("admin.posts")}
                     </span>
                     <span className="font-bold text-foreground">{stats.totalPosts}</span>
                   </li>
                   <li className="flex items-center justify-between text-sm">
                     <span className="flex items-center gap-1.5 text-muted-foreground">
-                      <Globe className="size-3.5" /> Vệ tinh hoạt động
+                      <Globe className="size-3.5" /> {t("admin.activeSatellites")}
                     </span>
                     <span className="font-bold text-foreground">{stats.activeSatellites}</span>
                   </li>
@@ -114,18 +116,18 @@ export default function AdminDashboard() {
 
             {/* Giao dịch gần đây */}
             <div className="rounded-xl border border-primary/15 bg-card p-6 shadow-sm">
-              <h2 className="mb-4 text-base font-bold text-foreground">Giao dịch gần đây</h2>
+              <h2 className="mb-4 text-base font-bold text-foreground">{t("admin.recentTransactions")}</h2>
               {stats.recentTransactions.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Chưa có giao dịch nào.</p>
+                <p className="text-sm text-muted-foreground">{t("admin.noTransactions")}</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border text-left text-xs uppercase text-muted-foreground">
-                        <th className="pb-2 font-semibold">Người dùng</th>
-                        <th className="pb-2 font-semibold">Gói</th>
-                        <th className="pb-2 text-right font-semibold">Số tiền</th>
-                        <th className="pb-2 text-right font-semibold">Thời gian</th>
+                        <th className="pb-2 font-semibold">{t("admin.colUser")}</th>
+                        <th className="pb-2 font-semibold">{t("admin.colPlan")}</th>
+                        <th className="pb-2 text-right font-semibold">{t("admin.colAmount")}</th>
+                        <th className="pb-2 text-right font-semibold">{t("admin.colTime")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -149,7 +151,7 @@ export default function AdminDashboard() {
             </div>
           </div>
         ) : (
-          <p className="text-muted-foreground">Không tải được dữ liệu.</p>
+          <p className="text-muted-foreground">{t("admin.loadFailed")}</p>
         )}
       </main>
     </div>

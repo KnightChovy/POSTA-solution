@@ -32,6 +32,7 @@ import {
   revokeSessionService,
 } from "@/service/authService";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 
 interface SessionItem {
   id: string;
@@ -45,6 +46,7 @@ const MAX_AVATAR_MB = 2;
 
 // Thẻ "Gói hiện tại" — tự tải subscription, hiển thị hạn mức + thanh quota.
 function PlanCard() {
+  const { t } = useTranslation();
   const { subscription, getSubscription } = usePlanStore();
 
   useEffect(() => {
@@ -54,20 +56,22 @@ function PlanCard() {
   if (!subscription) return null;
   const { plan, usage } = subscription;
   const rows = [
-    { label: "Website", ...usage.websites },
-    { label: "Lần dùng AI", ...usage.ai },
-    { label: "Bài đăng", ...usage.posts },
+    { label: t("dashboard.website"), ...usage.websites },
+    { label: t("dashboard.aiUsage"), ...usage.ai },
+    { label: t("dashboard.postsUsage"), ...usage.posts },
   ];
 
   return (
     <section className="rounded-xl border border-primary/15 bg-card p-6 shadow-sm">
       <div className="mb-5 flex items-center justify-between border-b border-border pb-3">
-        <h2 className="text-base font-bold text-foreground">Gói hiện tại</h2>
+        <h2 className="text-base font-bold text-foreground">
+          {t("dashboard.currentPlan")}
+        </h2>
         <Link
           to="/pricing"
           className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground cursor-pointer hover:opacity-90"
         >
-          Nâng cấp
+          {t("dashboard.upgrade")}
         </Link>
       </div>
       <p className="mb-4 text-lg font-bold text-primary">{plan.name}</p>
@@ -114,6 +118,7 @@ function formatDate(d?: string) {
 }
 
 export default function ProfilePage() {
+  const { t } = useTranslation();
   const { profile, loading, saving, getProfile, updateProfile } = useProfileStore();
   const updateUser = useAuthStore((s) => s.updateUser);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -166,7 +171,7 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > MAX_AVATAR_MB * 1024 * 1024) {
-      toast.error(`Ảnh tối đa ${MAX_AVATAR_MB}MB`);
+      toast.error(t("dashboard.avatarMaxSize", { max: MAX_AVATAR_MB }));
       return;
     }
     const reader = new FileReader();
@@ -205,20 +210,20 @@ export default function ProfilePage() {
 
   const handleChangePassword = async () => {
     if (pwd.newPassword !== pwd.confirm) {
-      toast.error("Mật khẩu xác nhận không khớp");
+      toast.error(t("dashboard.passwordMismatch"));
       return;
     }
     setChangingPwd(true);
     try {
       const res = await changePasswordService(pwd.oldPassword, pwd.newPassword);
       if (res?.error) {
-        toast.error(res.message || "Đổi mật khẩu thất bại");
+        toast.error(res.message || t("dashboard.changePasswordFailed"));
       } else {
-        toast.success(res.message || "Đổi mật khẩu thành công");
+        toast.success(res.message || t("dashboard.changePasswordSuccess"));
         setPwd({ oldPassword: "", newPassword: "", confirm: "" });
       }
     } catch {
-      toast.error("Có lỗi xảy ra, vui lòng thử lại");
+      toast.error(t("dashboard.genericError"));
     } finally {
       setChangingPwd(false);
     }
@@ -227,7 +232,7 @@ export default function ProfilePage() {
   const handleRevoke = async (id: string) => {
     const res = await revokeSessionService(id);
     if (!res?.error) {
-      toast.success("Đã thu hồi phiên");
+      toast.success(t("dashboard.sessionRevoked"));
       setSessions((s) => s.filter((x) => x.id !== id));
     }
   };
@@ -245,9 +250,11 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-background">
       <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Hồ sơ cá nhân</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            {t("dashboard.profileTitle")}
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Quản lý thông tin tài khoản POSTA của bạn.
+            {t("dashboard.profileSubtitle")}
           </p>
         </div>
 
@@ -263,7 +270,7 @@ export default function ProfilePage() {
                 <div className="relative">
                   <div className="flex size-28 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-3xl font-bold text-primary ring-1 ring-primary/20">
                     {preview ? (
-                      <img src={preview} alt="Ảnh đại diện" className="size-full object-cover" />
+                      <img src={preview} alt={t("dashboard.avatarAlt")} className="size-full object-cover" />
                     ) : (
                       initialsOf(form.name)
                     )}
@@ -272,7 +279,7 @@ export default function ProfilePage() {
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     className="absolute -bottom-1 -right-1 flex size-9 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition-transform duration-200 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                    aria-label="Đổi ảnh đại diện"
+                    aria-label={t("dashboard.changeAvatarAria")}
                   >
                     <Camera className="size-4" />
                   </button>
@@ -286,7 +293,7 @@ export default function ProfilePage() {
                 </div>
 
                 <div>
-                  <p className="text-lg font-bold text-foreground">{form.name || "Người dùng"}</p>
+                  <p className="text-lg font-bold text-foreground">{form.name || t("dashboard.user")}</p>
                   <p className="text-sm text-muted-foreground">{profile?.email}</p>
                   {(form.jobTitle || form.company) && (
                     <p className="mt-1 text-xs text-muted-foreground">
@@ -298,7 +305,7 @@ export default function ProfilePage() {
                 {profile?.isAdmin && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-primary">
                     <ShieldCheck className="size-3.5" />
-                    Quản trị viên
+                    {t("dashboard.administrator")}
                   </span>
                 )}
 
@@ -309,13 +316,13 @@ export default function ProfilePage() {
                     className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-destructive hover:underline"
                   >
                     <Trash2 className="size-3.5" />
-                    Xoá ảnh đại diện
+                    {t("dashboard.removeAvatar")}
                   </button>
                 )}
 
                 <div className="mt-2 flex w-full items-center justify-center gap-2 border-t border-border pt-4 text-xs text-muted-foreground">
                   <CalendarDays className="size-3.5" />
-                  Tham gia: {formatDate(profile?.createdAt)}
+                  {t("dashboard.joined")}: {formatDate(profile?.createdAt)}
                 </div>
               </div>
             </aside>
@@ -328,16 +335,16 @@ export default function ProfilePage() {
               {/* Thông tin cá nhân */}
               <section className="rounded-xl border border-primary/15 bg-card p-6 shadow-sm">
                 <h2 className="mb-5 border-b border-border pb-3 text-base font-bold text-foreground">
-                  Thông tin cá nhân
+                  {t("dashboard.personalInfo")}
                 </h2>
                 <div className="grid gap-5 sm:grid-cols-2">
                   <Field
                     id="name"
-                    label="Họ và tên"
+                    label={t("dashboard.fullName")}
                     icon={User}
                     value={form.name}
                     onChange={(v) => setField("name", v)}
-                    placeholder="Họ và tên"
+                    placeholder={t("dashboard.fullName")}
                   />
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="email">Email</Label>
@@ -350,11 +357,11 @@ export default function ProfilePage() {
                         className="h-11 cursor-not-allowed pl-10"
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">Email không thể thay đổi.</p>
+                    <p className="text-xs text-muted-foreground">{t("dashboard.emailImmutable")}</p>
                   </div>
                   <Field
                     id="phone"
-                    label="Số điện thoại"
+                    label={t("dashboard.phone")}
                     icon={Phone}
                     value={form.phone}
                     onChange={(v) => setField("phone", v)}
@@ -362,19 +369,19 @@ export default function ProfilePage() {
                   />
                   <Field
                     id="jobTitle"
-                    label="Chức danh"
+                    label={t("dashboard.jobTitle")}
                     icon={Briefcase}
                     value={form.jobTitle}
                     onChange={(v) => setField("jobTitle", v)}
-                    placeholder="VD: Trưởng phòng SEO"
+                    placeholder={t("dashboard.jobTitlePlaceholder")}
                   />
                   <Field
                     id="company"
-                    label="Công ty"
+                    label={t("dashboard.company")}
                     icon={Building2}
                     value={form.company}
                     onChange={(v) => setField("company", v)}
-                    placeholder="Tên công ty"
+                    placeholder={t("dashboard.companyPlaceholder")}
                   />
                 </div>
               </section>
@@ -382,12 +389,12 @@ export default function ProfilePage() {
               {/* Liên hệ */}
               <section className="rounded-xl border border-primary/15 bg-card p-6 shadow-sm">
                 <h2 className="mb-5 border-b border-border pb-3 text-base font-bold text-foreground">
-                  Liên hệ
+                  {t("dashboard.contact")}
                 </h2>
                 <div className="grid gap-5 sm:grid-cols-2">
                   <Field
                     id="website"
-                    label="Website"
+                    label={t("dashboard.website")}
                     icon={Globe}
                     value={form.website}
                     onChange={(v) => setField("website", v)}
@@ -395,11 +402,11 @@ export default function ProfilePage() {
                   />
                   <Field
                     id="address"
-                    label="Địa chỉ"
+                    label={t("dashboard.address")}
                     icon={MapPin}
                     value={form.address}
                     onChange={(v) => setField("address", v)}
-                    placeholder="Địa chỉ liên hệ"
+                    placeholder={t("dashboard.addressPlaceholder")}
                   />
                 </div>
               </section>
@@ -407,15 +414,15 @@ export default function ProfilePage() {
               {/* Giới thiệu */}
               <section className="rounded-xl border border-primary/15 bg-card p-6 shadow-sm">
                 <h2 className="mb-5 border-b border-border pb-3 text-base font-bold text-foreground">
-                  Giới thiệu
+                  {t("dashboard.about")}
                 </h2>
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="bio">Mô tả ngắn về bạn</Label>
+                  <Label htmlFor="bio">{t("dashboard.bioLabel")}</Label>
                   <Textarea
                     id="bio"
                     value={form.bio}
                     onChange={(e) => setField("bio", e.target.value)}
-                    placeholder="Vài dòng giới thiệu về bạn hoặc doanh nghiệp..."
+                    placeholder={t("dashboard.bioPlaceholder")}
                     rows={4}
                     className="resize-none focus-visible:ring-primary"
                   />
@@ -429,7 +436,7 @@ export default function ProfilePage() {
                   className="cursor-pointer gap-2 px-6 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {saving && <Loader2 className="size-4 animate-spin" />}
-                  Lưu thay đổi
+                  {t("dashboard.saveChanges")}
                 </Button>
               </div>
 
@@ -437,25 +444,25 @@ export default function ProfilePage() {
               <section className="rounded-xl border border-primary/15 bg-card p-6 shadow-sm">
                 <h2 className="mb-5 flex items-center gap-2 border-b border-border pb-3 text-base font-bold text-foreground">
                   <KeyRound className="size-4 text-primary" />
-                  Đổi mật khẩu
+                  {t("dashboard.changePassword")}
                 </h2>
                 <div className="flex flex-col gap-5">
                   <div className="flex flex-col gap-2">
-                    <Label htmlFor="oldPassword">Mật khẩu hiện tại</Label>
+                    <Label htmlFor="oldPassword">{t("dashboard.currentPassword")}</Label>
                     <div className="relative flex items-center">
                       <Input
                         id="oldPassword"
                         type={showPwd ? "text" : "password"}
                         value={pwd.oldPassword}
                         onChange={(e) => setPwd((p) => ({ ...p, oldPassword: e.target.value }))}
-                        placeholder="Mật khẩu hiện tại"
+                        placeholder={t("dashboard.currentPassword")}
                         className="h-11 pr-10 focus-visible:ring-primary"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPwd((v) => !v)}
                         className="absolute right-3 cursor-pointer text-muted-foreground hover:text-foreground"
-                        aria-label={showPwd ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                        aria-label={showPwd ? t("dashboard.hidePassword") : t("dashboard.showPassword")}
                       >
                         {showPwd ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                       </button>
@@ -463,24 +470,24 @@ export default function ProfilePage() {
                   </div>
                   <div className="grid gap-5 sm:grid-cols-2">
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor="newPassword">Mật khẩu mới</Label>
+                      <Label htmlFor="newPassword">{t("dashboard.newPassword")}</Label>
                       <Input
                         id="newPassword"
                         type={showPwd ? "text" : "password"}
                         value={pwd.newPassword}
                         onChange={(e) => setPwd((p) => ({ ...p, newPassword: e.target.value }))}
-                        placeholder="Tối thiểu 6 ký tự"
+                        placeholder={t("dashboard.newPasswordPlaceholder")}
                         className="h-11 focus-visible:ring-primary"
                       />
                     </div>
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor="confirmNew">Xác nhận mật khẩu mới</Label>
+                      <Label htmlFor="confirmNew">{t("dashboard.confirmNewPassword")}</Label>
                       <Input
                         id="confirmNew"
                         type={showPwd ? "text" : "password"}
                         value={pwd.confirm}
                         onChange={(e) => setPwd((p) => ({ ...p, confirm: e.target.value }))}
-                        placeholder="Nhập lại mật khẩu mới"
+                        placeholder={t("dashboard.confirmNewPasswordPlaceholder")}
                         className="h-11 focus-visible:ring-primary"
                       />
                     </div>
@@ -493,7 +500,7 @@ export default function ProfilePage() {
                       className="cursor-pointer gap-2"
                     >
                       {changingPwd && <Loader2 className="size-4 animate-spin" />}
-                      Đổi mật khẩu
+                      {t("dashboard.changePassword")}
                     </Button>
                   </div>
                 </div>
@@ -503,10 +510,10 @@ export default function ProfilePage() {
               <section className="rounded-xl border border-primary/15 bg-card p-6 shadow-sm">
                 <h2 className="mb-5 flex items-center gap-2 border-b border-border pb-3 text-base font-bold text-foreground">
                   <MonitorSmartphone className="size-4 text-primary" />
-                  Phiên đăng nhập ({sessions.length})
+                  {t("dashboard.loginSessions", { count: sessions.length })}
                 </h2>
                 {sessions.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Không có phiên nào.</p>
+                  <p className="text-sm text-muted-foreground">{t("dashboard.noSessions")}</p>
                 ) : (
                   <ul className="flex flex-col gap-3">
                     {sessions.map((s) => (
@@ -516,17 +523,17 @@ export default function ProfilePage() {
                       >
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium text-foreground">
-                            {s.device || "Thiết bị không xác định"}
+                            {s.device || t("dashboard.unknownDevice")}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            IP: {s.ip || "—"} · Hoạt động: {fmtTime(s.lastUsedAt)}
+                            IP: {s.ip || "—"} · {t("dashboard.lastActive")}: {fmtTime(s.lastUsedAt)}
                           </p>
                         </div>
                         <button
                           onClick={() => handleRevoke(s.id)}
                           className="shrink-0 cursor-pointer rounded-md p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                          aria-label="Thu hồi phiên"
-                          title="Thu hồi phiên"
+                          aria-label={t("dashboard.revokeSession")}
+                          title={t("dashboard.revokeSession")}
                         >
                           <Trash2 className="size-4" />
                         </button>

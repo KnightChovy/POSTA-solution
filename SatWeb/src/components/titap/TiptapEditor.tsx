@@ -4,6 +4,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import { Bold, Italic, LinkIcon, Image as ImageIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 
 interface TiptapEditorProps {
@@ -17,6 +18,7 @@ export default function TiptapEditor({
   onChange,
   onImageUpload,
 }: TiptapEditorProps) {
+  const { t } = useTranslation();
   const editor = useEditor({
     extensions: [StarterKit, Image, Link],
     content: value,
@@ -70,7 +72,7 @@ export default function TiptapEditor({
           variant="outline"
           size="sm"
           onClick={() => {
-            const url = prompt("Nhập URL liên kết:");
+            const url = prompt(t("posts.linkUrlPrompt"));
             if (url) editor.chain().focus().setLink({ href: url }).run();
           }}
         >

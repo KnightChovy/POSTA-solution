@@ -1,20 +1,23 @@
 // Tiện ích hiển thị gói dịch vụ (dùng chung cho landing / pricing / profile / admin).
+import i18n from "@/i18n";
 
 export function formatVND(amount: number): string {
-  if (!amount || amount <= 0) return "Miễn phí";
-  return amount.toLocaleString("vi-VN") + "đ";
+  if (!amount || amount <= 0) return i18n.t("plan.free");
+  const locale = i18n.language === "en" ? "en-US" : "vi-VN";
+  return amount.toLocaleString(locale) + "đ";
 }
 
-const PERIOD_LABEL: Record<string, string> = {
-  week: "tuần",
-  month: "tháng",
+// Khoá i18n cho hậu tố kỳ hạn ("/tháng", "/tuần"); "none" = không hiển thị.
+const PERIOD_KEY: Record<string, string> = {
+  week: "plan.periodWeek",
+  month: "plan.periodMonth",
   none: "",
 };
 
 // Mô tả một giới hạn dạng "5 website", "không giới hạn AI", "3 bài/tháng".
 export function limitText(value: number, noun: string, period?: string): string {
-  if (value === -1) return `Không giới hạn ${noun}`;
-  const suffix = period && PERIOD_LABEL[period] ? `/${PERIOD_LABEL[period]}` : "";
+  if (value === -1) return i18n.t("plan.unlimited", { noun });
+  const suffix = period && PERIOD_KEY[period] ? `/${i18n.t(PERIOD_KEY[period])}` : "";
   return `${value} ${noun}${suffix}`;
 }
 

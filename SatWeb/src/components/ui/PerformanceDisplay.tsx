@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Clock, TrendingUp, TrendingDown, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +20,7 @@ export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = ({
   onClear,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { t } = useTranslation();
 
   // Tính toán thống kê realtime
   const realtimeStats = React.useMemo(() => {
@@ -71,7 +73,7 @@ export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Activity className="h-5 w-5 text-blue-600" />
-            <CardTitle className="text-lg">Performance Monitor</CardTitle>
+            <CardTitle className="text-lg">{t("nav.performanceMonitor")}</CardTitle>
           </div>
           <div className="flex space-x-2">
             <Button
@@ -79,7 +81,7 @@ export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = ({
               size="sm"
               onClick={() => setIsExpanded(!isExpanded)}
             >
-              {isExpanded ? "Thu gọn" : "Chi tiết"}
+              {isExpanded ? t("nav.collapse") : t("nav.details")}
             </Button>
             <Button
               variant="outline"
@@ -87,13 +89,11 @@ export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = ({
               onClick={onClear}
               disabled={metrics.length === 0}
             >
-              Xóa
+              {t("nav.clear")}
             </Button>
           </div>
         </div>
-        <CardDescription>
-          Theo dõi hiệu suất thời gian thực của các thao tác
-        </CardDescription>
+        <CardDescription>{t("nav.performanceDescription")}</CardDescription>
       </CardHeader>
 
       <CardContent>
@@ -103,7 +103,7 @@ export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = ({
             <div className="text-2xl font-bold text-blue-600">
               {realtimeStats.totalOperations}
             </div>
-            <div className="text-sm text-gray-600">Tổng thao tác</div>
+            <div className="text-sm text-gray-600">{t("nav.totalOperations")}</div>
           </div>
 
           <div className="text-center p-3 bg-green-50 rounded-lg">
@@ -114,21 +114,21 @@ export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = ({
             >
               {formatTime(realtimeStats.averageTime)}
             </div>
-            <div className="text-sm text-gray-600">Thời gian TB</div>
+            <div className="text-sm text-gray-600">{t("nav.averageTime")}</div>
           </div>
 
           <div className="text-center p-3 bg-purple-50 rounded-lg">
             <div className="text-2xl font-bold text-purple-600">
               {realtimeStats.successRate.toFixed(0)}%
             </div>
-            <div className="text-sm text-gray-600">Tỷ lệ thành công</div>
+            <div className="text-sm text-gray-600">{t("nav.successRate")}</div>
           </div>
 
           <div className="text-center p-3 bg-orange-50 rounded-lg">
             <div className="text-2xl font-bold text-orange-600">
               {realtimeStats.runningCount}
             </div>
-            <div className="text-sm text-gray-600">Đang chạy</div>
+            <div className="text-sm text-gray-600">{t("nav.running")}</div>
           </div>
         </div>
 
@@ -136,7 +136,7 @@ export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = ({
         {realtimeStats.lastOperation && (
           <div className="mb-4 p-3 bg-gray-50 rounded-lg">
             <div className="flex items-center justify-between">
-              <span className="font-medium">Thao tác gần nhất:</span>
+              <span className="font-medium">{t("nav.lastOperation")}</span>
               <span className="text-sm text-gray-500">
                 {new Date(
                   Date.now() -
@@ -169,7 +169,7 @@ export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = ({
         {/* Chi tiết metrics */}
         {isExpanded && (
           <div className="space-y-2">
-            <h4 className="font-medium text-sm">Lịch sử thao tác:</h4>
+            <h4 className="font-medium text-sm">{t("nav.operationHistory")}</h4>
             <div className="max-h-60 overflow-y-auto space-y-1">
               {metrics
                 .slice()
@@ -190,7 +190,7 @@ export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = ({
                       {metric.status === "running" ? (
                         <div className="flex items-center space-x-1">
                           <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
-                          <span className="text-blue-600">Đang chạy...</span>
+                          <span className="text-blue-600">{t("nav.runningEllipsis")}</span>
                         </div>
                       ) : (
                         <>
@@ -216,10 +216,8 @@ export const PerformanceDisplay: React.FC<PerformanceDisplayProps> = ({
         {metrics.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             <Clock className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>Chưa có dữ liệu performance</p>
-            <p className="text-sm">
-              Thực hiện một thao tác để bắt đầu theo dõi
-            </p>
+            <p>{t("nav.noPerformanceData")}</p>
+            <p className="text-sm">{t("nav.startTrackingHint")}</p>
           </div>
         )}
       </CardContent>

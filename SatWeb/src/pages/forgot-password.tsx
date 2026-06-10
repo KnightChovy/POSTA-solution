@@ -4,6 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { Loader2, Mail, ArrowLeft, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,18 +20,23 @@ import {
 import AuthShell from "@/components/auth/AuthShell";
 import { forgotPasswordService } from "@/service/authService";
 
-const forgotSchema = z.object({
-  email: z.string().min(1, "Email là bắt buộc").email("Email không hợp lệ"),
-});
+const makeForgotSchema = (t: TFunction) =>
+  z.object({
+    email: z
+      .string()
+      .min(1, t("auth.emailRequired"))
+      .email(t("auth.emailInvalid")),
+  });
 
-type ForgotFormData = z.infer<typeof forgotSchema>;
+type ForgotFormData = z.infer<ReturnType<typeof makeForgotSchema>>;
 
 export default function ForgotPasswordPage() {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
   const form = useForm<ForgotFormData>({
-    resolver: zodResolver(forgotSchema),
+    resolver: zodResolver(makeForgotSchema(t)),
     defaultValues: { email: "" },
   });
 
@@ -38,13 +45,13 @@ export default function ForgotPasswordPage() {
     try {
       const res = await forgotPasswordService(data.email);
       if (res?.error) {
-        toast.error(res.message || "Có lỗi xảy ra, vui lòng thử lại.");
+        toast.error(res.message || t("auth.errorGeneric"));
       } else {
         setSent(true);
-        toast.success(res.message || "Đã gửi hướng dẫn đặt lại mật khẩu.");
+        toast.success(res.message || t("auth.forgotSuccess"));
       }
     } catch {
-      toast.error("Có lỗi xảy ra, vui lòng thử lại.");
+      toast.error(t("auth.errorGeneric"));
     } finally {
       setIsLoading(false);
     }
@@ -52,8 +59,8 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthShell
-      title="Quên mật khẩu?"
-      subtitle="Nhập email để nhận liên kết đặt lại mật khẩu"
+      title={t("auth.forgotTitle")}
+      subtitle={t("auth.forgotSubtitle")}
     >
       {sent ? (
         <div className="flex flex-col items-center gap-4 rounded-xl border border-primary/15 bg-card p-8 text-center shadow-sm">
@@ -61,9 +68,9 @@ export default function ForgotPasswordPage() {
             <MailCheck className="size-7" />
           </span>
           <div>
-            <p className="font-bold text-foreground">Kiểm tra hộp thư của bạn</p>
+            <p className="font-bold text-foreground">{t("auth.checkInbox")}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Chúng tôi đã gửi liên kết đặt lại mật khẩu tới{" "}
+              {t("auth.resetLinkSentTo")}{" "}
               <span className="font-semibold text-foreground">{form.getValues("email")}</span>.
             </p>
           </div>
@@ -72,7 +79,7 @@ export default function ForgotPasswordPage() {
             className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
           >
             <ArrowLeft className="size-4" />
-            Quay lại đăng nhập
+            {t("auth.backToLogin")}
           </Link>
         </div>
       ) : (
@@ -84,14 +91,14 @@ export default function ForgotPasswordPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>{t("auth.emailLabel")}</FormLabel>
                     <FormControl>
                       <div className="relative flex items-center">
                         <Mail className="absolute left-3 size-4 text-muted-foreground" />
                         <Input
                           {...field}
                           type="email"
-                          placeholder="ban@congty.vn"
+                          placeholder={t("auth.emailPlaceholder")}
                           disabled={isLoading}
                           className="h-11 pl-10 focus-visible:ring-primary"
                         />
@@ -108,7 +115,7 @@ export default function ForgotPasswordPage() {
                 className="h-11 w-full cursor-pointer gap-2 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
               >
                 {isLoading && <Loader2 className="size-4 animate-spin" />}
-                Gửi liên kết đặt lại
+                {t("auth.sendResetLink")}
               </Button>
             </form>
           </Form>
@@ -118,7 +125,7 @@ export default function ForgotPasswordPage() {
             className="inline-flex items-center justify-center gap-2 text-sm font-semibold text-primary hover:underline"
           >
             <ArrowLeft className="size-4" />
-            Quay lại đăng nhập
+            {t("auth.backToLogin")}
           </Link>
         </div>
       )}

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { useAuthStore } from "@/store/authStore";
 import { GoogleButton } from "./AuthShell";
@@ -32,6 +33,7 @@ interface Props {
 
 export default function GoogleLoginButton({ label }: Props) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -47,9 +49,9 @@ export default function GoogleLoginButton({ label }: Props) {
           callback: async (resp: any) => {
             const res = await loginWithGoogle(resp.credential);
             if (res?.error) {
-              toast.error(res.message || "Đăng nhập Google thất bại");
+              toast.error(res.message || t("auth.googleLoginFailed"));
             } else {
-              toast.success("Đăng nhập thành công!");
+              toast.success(t("auth.loginSuccess"));
               navigate("/dashboard");
             }
           },
@@ -69,14 +71,14 @@ export default function GoogleLoginButton({ label }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [loginWithGoogle, navigate]);
+  }, [loginWithGoogle, navigate, t]);
 
   // Chưa cấu hình Client ID → nút mô phỏng (giữ giao diện).
   if (!CLIENT_ID) {
     return (
       <GoogleButton
         label={label}
-        onClick={() => toast.info("Đăng nhập Google chưa được cấu hình (thiếu VITE_GOOGLE_CLIENT_ID).")}
+        onClick={() => toast.info(t("auth.googleNotConfigured"))}
       />
     );
   }
