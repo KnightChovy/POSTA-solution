@@ -32,9 +32,7 @@ import SeoPanel from "@/components/posts/SeoPanel";
 // (vd trên Vercel/preview chưa cấu hình env) thì fallback về key hardcode dưới đây
 // để vẫn chạy được khi test. Key này được bảo vệ bằng Approved Domains, không phải
 // secret. Muốn đổi key sạch sẽ thì set env, khỏi sửa code.
-const TINYMCE_API_KEY =
-  (import.meta.env.VITE_TINYMCE_API_KEY as string) ||
-  "wu0wd7sscidx08qfrcp0panj4v0sx7i5174yy8ehncu8jyhm";
+const TINYMCE_API_KEY = "wu0wd7sscidx08qfrcp0panj4v0sx7i5174yy8ehncu8jyhm";
 
 const formSchema = z.object({
   title: z
@@ -205,7 +203,7 @@ const PostForm = ({
       formData.append("values", JSON.stringify(values));
       formData.append(
         "siteInfoWithImageUrl",
-        JSON.stringify(siteInfoWithImageUrl.current)
+        JSON.stringify(siteInfoWithImageUrl.current),
       );
 
       // Dùng axios (global) để interceptor tự gắn "Authorization: Bearer" +
@@ -245,7 +243,7 @@ const PostForm = ({
     });
     if (result) {
       toast.info(
-        `Đã chấm điểm SEO: ${result.score}/100. Xem đánh giá bên dưới rồi bấm "Đăng bài ngay".`
+        `Đã chấm điểm SEO: ${result.score}/100. Xem đánh giá bên dưới rồi bấm "Đăng bài ngay".`,
       );
     }
   };
@@ -302,7 +300,7 @@ const PostForm = ({
   // upload vào media của từng WordPress nữa (tránh CORS + không lộ app password).
   const uploadImageToServer = async (
     file: Blob,
-    filename?: string
+    filename?: string,
   ): Promise<string> => {
     const type = file.type || "image/png";
     const ext = type.split("/")[1] || "png";
@@ -378,8 +376,7 @@ const PostForm = ({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handlePrePublish)}
-            className="space-y-6 p-6"
-          >
+            className="space-y-6 p-6">
             <FormField
               control={form.control}
               name="title"
@@ -439,7 +436,7 @@ const PostForm = ({
                         images_upload_handler: async (blobInfo) =>
                           uploadImageToServer(
                             blobInfo.blob(),
-                            blobInfo.filename()
+                            blobInfo.filename(),
                           ),
                         automatic_uploads: true,
                         file_picker_types: "image",
@@ -477,8 +474,7 @@ const PostForm = ({
                   variant="secondary"
                   className="cursor-pointer shrink-0"
                   onClick={handleCheckSeo}
-                  disabled={evaluating}
-                >
+                  disabled={evaluating}>
                   {evaluating ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   ) : (
@@ -501,15 +497,13 @@ const PostForm = ({
                   form.reset();
                   setKeyword("");
                   resetSeo();
-                }}
-              >
+                }}>
                 Hủy
               </Button>
               <Button
                 disabled={uploading || evaluating || publishing}
                 type="submit"
-                className="cursor-pointer"
-              >
+                className="cursor-pointer">
                 {evaluating ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
