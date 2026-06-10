@@ -69,16 +69,17 @@ const PricingPage = () => {
   // Giá gói hiện tại để so sánh: chỉ cho NÂNG CẤP (gói đắt hơn), khoá các gói thấp hơn/bằng.
   const currentPrice = subscription?.plan?.price ?? 0;
 
-  // Trong lúc mở dialog thanh toán, poll subscription để bắt webhook SePay kích hoạt.
+  // Trong lúc mở dialog, theo dõi TRẠNG THÁI CỦA ĐÚNG GIAO DỊCH ĐANG HIỂN THỊ (theo
+  // reference) thay vì chỉ kiểm tra "user còn giao dịch chờ nào không" — vì user có thể
+  // có nhiều giao dịch chờ khác khiến dialog không bao giờ tự đóng dù giao dịch này đã trả.
   useEffect(() => {
     if (!payment) return;
     pollRef.current = window.setInterval(async () => {
-      await getSubscription();
-      const pending = usePlanStore.getState().subscription?.pending;
-      if (!pending) {
-        // Đã thanh toán xong (pending biến mất) → đóng dialog + làm mới lịch sử.
+      await Promise.all([getSubscription(), getTransactions()]);
+      const tx = usePlanStore.getState().transactions.find((t) => t.reference === payment.reference);
+      // Giao dịch này không còn 'pending' (đã thanh toán / bị hủy) → đóng dialog.
+      if (tx && tx.status !== "pending") {
         setPayment(null);
-        getTransactions();
       }
     }, 4000);
     return () => {
