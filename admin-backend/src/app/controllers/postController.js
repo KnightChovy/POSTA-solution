@@ -13,7 +13,9 @@ const { replaceImagesInContent } = require("../../utils/postUtils");
 const { incrementAiUsage } = require("../../utils/subscription");
 const getAllPosts = async (req, res) => {
   try {
-    const allPosts = await Post.find();
+    // Admin xem toàn bộ bài của hệ thống; user chỉ xem bài của chính mình.
+    const filter = req.user?.isAdmin ? {} : { owner: req.user.id };
+    const allPosts = await Post.find(filter);
     return res.json({ allPosts });
   } catch (error) {
     res.status(500).json({ error });
@@ -26,9 +28,10 @@ const trackProgress = async (req, res) => {
     if (!postTitle) {
       return res.status(400).json({ message: "Post title is required" });
     }
-    const post = await Post.findOne({
-      title: postTitle,
-    }).sort({ createdAt: -1 });
+    // User chỉ xem tiến độ bài của mình; admin xem mọi bài.
+    const filter = { title: postTitle };
+    if (!req.user?.isAdmin) filter.owner = req.user.id;
+    const post = await Post.findOne(filter).sort({ createdAt: -1 });
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
     }
@@ -328,6 +331,10 @@ const getErrorPost = async (req, res) => {
     if (!post) {
       return res.status(404).json({ message: "Không tìm thấy bài viết" });
     }
+    // User chỉ xem bài của mình; admin xem mọi bài.
+    if (!req.user?.isAdmin && String(post.owner) !== String(req.user.id)) {
+      return res.status(403).json({ message: "Bạn không có quyền xem bài viết này" });
+    }
     const postContent = post.content;
     const images = post.imagePath.map(
       (img) => `${process.env.SERVER_URL}/${img}`
@@ -346,6 +353,10 @@ const getPostById = async (req, res) => {
     const post = await Post.findById(id);
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
+    }
+    // User chỉ xem bài của mình; admin xem mọi bài.
+    if (!req.user?.isAdmin && String(post.owner) !== String(req.user.id)) {
+      return res.status(403).json({ message: "Bạn không có quyền xem bài viết này" });
     }
     returnedPost = await convertErrorSatelliteToUrls(post);
     res.status(200).json({ post: returnedPost });
