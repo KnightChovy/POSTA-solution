@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-const ViewSat = ({ sites: initialSites } = {}) => {
+const ViewSat = ({ sites: initialSites }: { sites?: any[] } = {}) => {
   const { t } = useTranslation();
   const [visiblePasswordId, setVisiblePasswordId] = useState<
     string | number | null

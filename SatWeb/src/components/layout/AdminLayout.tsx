@@ -12,6 +12,7 @@ import {
   Sun,
   Menu,
   X,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
@@ -26,11 +27,14 @@ const NAV = [
 
 // Layout riêng cho khu quản trị: sidebar trái, không dùng thanh điều hướng của user.
 const AdminLayout = ({ children }: { children: ReactNode }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const lang = i18n.language?.startsWith("en") ? "en" : "vi";
+  const changeLang = (value: string) => i18n.changeLanguage(value);
 
   const handleLogout = () => {
     logout();
@@ -39,9 +43,9 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
 
   const SidebarBody = () => (
     <div className="flex h-full flex-col">
-      {/* Logo */}
+      {/* Logo — bấm để về bảng điều khiển người dùng */}
       <button
-        onClick={() => navigate("/admin")}
+        onClick={() => navigate("/dashboard")}
         className="flex items-center gap-2 px-5 py-5 cursor-pointer"
         aria-label="POSTA Admin"
       >
@@ -79,6 +83,18 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
 
       {/* Footer */}
       <div className="flex flex-col gap-1 border-t border-border px-3 py-3">
+        <div className="relative flex items-center px-1 py-1">
+          <Globe className="pointer-events-none absolute left-3 size-4 text-muted-foreground" />
+          <select
+            aria-label={t("common.language")}
+            value={lang}
+            onChange={(e) => changeLang(e.target.value)}
+            className="h-10 w-full cursor-pointer appearance-none rounded-lg border border-border bg-card pl-9 pr-3 text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          >
+            <option value="vi">Tiếng Việt</option>
+            <option value="en">English</option>
+          </select>
+        </div>
         <button
           onClick={toggleTheme}
           className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground cursor-pointer"

@@ -29,7 +29,6 @@ const refreshClient = axios.create({ baseURL });
 axios.interceptors.request.use((config) => {
   const token = tokenStore.access;
   if (token) {
-    config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;

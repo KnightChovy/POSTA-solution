@@ -58,7 +58,9 @@ const PricingSection = () => {
                 )}
 
                 <h3 className="text-lg font-bold text-foreground">{p.name}</h3>
-                <p className="mt-1 min-h-[40px] text-sm text-muted-foreground">{p.description}</p>
+                <p className="mt-1 min-h-[40px] text-sm text-muted-foreground">
+                  {t(`pricing.planDesc.${p.key}`, { defaultValue: p.description })}
+                </p>
 
                 <div className="mt-4 flex items-end gap-1">
                   <span className="text-3xl font-extrabold text-foreground">{formatVND(p.price)}</span>

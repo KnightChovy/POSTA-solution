@@ -33,6 +33,7 @@ import {
 import PostTable from "./posts/PostTable";
 import postStore from "@/store/postStore";
 import useSatelliteStore from "@/store/satetillite";
+import useProfileStore from "@/store/profileStore";
 
 /** Tài nguyên thương hiệu POSTA (đặt trong public/, tham chiếu từ gốc). */
 const POSTA_LOGO = "/logo-3.png";
@@ -139,6 +140,10 @@ const StatCard = ({
 const Home = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const profile = useProfileStore((s) => s.profile);
+  const getProfile = useProfileStore((s) => s.getProfile);
+  const displayName =
+    profile?.email?.trim().split("@")[0] || t("dashboard.greetingFallbackName");
   const [videoOpen, setVideoOpen] = useState(false);
 
   const {
@@ -159,6 +164,10 @@ const Home = () => {
   useEffect(() => {
     getSatellite();
   }, [getSatellite]);
+
+  useEffect(() => {
+    getProfile();
+  }, [getProfile]);
 
   useEffect(() => {
     getPostedPosts();
@@ -267,7 +276,7 @@ const Home = () => {
 
               <div className="space-y-2">
                 <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-                  {t("dashboard.greeting", { greeting: t(getGreetingKey()) })}
+                  {t("dashboard.greeting", { greeting: t(getGreetingKey()), name: displayName })}
                 </h1>
                 <p className="max-w-xl text-sm sm:text-base text-muted-foreground leading-relaxed">
                   {t("dashboard.heroDescriptionBefore")}{" "}
