@@ -20,7 +20,10 @@ const Sidebar = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const { theme, toggleTheme } = useThemeStore();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  const lang = i18n.language?.startsWith("en") ? "en" : "vi";
+  const changeLang = (value: string) => i18n.changeLanguage(value);
 
   const navItems = [
     { to: "/dashboard", label: t("nav.dashboard"), icon: Home },
@@ -48,6 +51,18 @@ const Sidebar = () => {
           </span>
         </div>
         <div className="flex items-center gap-2">
+          <div className="relative flex items-center">
+            <Globe className="pointer-events-none absolute left-2 size-4 text-muted-foreground" />
+            <select
+              aria-label={t("common.language")}
+              value={lang}
+              onChange={(e) => changeLang(e.target.value)}
+              className="h-9 cursor-pointer appearance-none rounded-xl border border-border bg-secondary pl-7 pr-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="vi">VI</option>
+              <option value="en">EN</option>
+            </select>
+          </div>
           <button
             onClick={toggleTheme}
             className="p-2 rounded-xl bg-secondary text-muted-foreground hover:text-foreground transition-all duration-200"

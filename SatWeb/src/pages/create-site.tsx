@@ -110,20 +110,20 @@ const CreateSite = () => {
                 <div className="grid grid-cols-1 gap-5">
                   <CustomFormField
                     name="url"
-                    label="Website URL"
+                    label={t("sites.formUrlLabel")}
                     placeholder="https://example.com"
                     disabled={!editMode}
                   />
                   <CustomFormField
                     name="username"
-                    label="Username"
+                    label={t("sites.formUsernameLabel")}
                     placeholder="admin_user"
                     disabled={!editMode}
                   />
 
                   <CustomFormField
                     name="password"
-                    label="Application Password"
+                    label={t("sites.formPasswordLabel")}
                     type="password"
                     placeholder={t("sites.passwordPlaceholder")}
                     disabled={!editMode}
