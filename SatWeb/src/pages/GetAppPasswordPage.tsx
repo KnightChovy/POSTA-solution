@@ -9,18 +9,27 @@ import {
   Lightbulb,
   ListChecks,
   ArrowUp,
+  ShieldAlert,
+  Wrench,
+  Headset,
+  RefreshCw,
+  Trash2,
 } from "lucide-react";
 import { useTranslation, Trans } from "react-i18next";
 
-/** Hình minh họa: có ảnh thì hiển thị ảnh + chú thích, chưa có ảnh thì bỏ qua. */
-const Figure: React.FC<{ src?: string | null; caption: string }> = ({
-  src,
-  caption,
-}) =>
-  src ? (
+/**
+ * Hình minh họa theo ngôn ngữ: ảnh lưu dạng /manual/<base>-<lang>.png
+ * (vd tong-quan-vi.png / tong-quan-en.png). Chưa có ảnh (base = null) thì bỏ qua.
+ */
+const Figure: React.FC<{
+  base?: string | null;
+  lang: string;
+  caption: string;
+}> = ({ base, lang, caption }) =>
+  base ? (
     <figure className="mt-4">
       <img
-        src={src}
+        src={`/manual/${base}-${lang}.png`}
         alt={caption}
         loading="lazy"
         className="w-full rounded-lg border border-border shadow-sm"
@@ -39,7 +48,7 @@ const NoteCallout: React.FC<{ text: string }> = ({ text }) => (
   </div>
 );
 
-/** Danh sách các bước có đánh số, cho phép in đậm/nghiêng inline. */
+/** Danh sách có đánh số (các bước), cho phép in đậm/nghiêng inline. */
 const Steps: React.FC<{ items: string[] }> = ({ items }) => (
   <ol className="list-inside list-decimal space-y-2 text-sm leading-relaxed text-muted-foreground">
     {items.map((s, i) => (
@@ -48,7 +57,25 @@ const Steps: React.FC<{ items: string[] }> = ({ items }) => (
   </ol>
 );
 
-interface SectionDef {
+/** Danh sách gạch đầu dòng, cho phép in đậm/nghiêng inline. */
+const Bullets: React.FC<{ items: string[] }> = ({ items }) => (
+  <ul className="list-inside list-disc space-y-2 text-sm leading-relaxed text-muted-foreground">
+    {items.map((s, i) => (
+      <li key={i} dangerouslySetInnerHTML={{ __html: s }} />
+    ))}
+  </ul>
+);
+
+/** Icon tròn nền hổ phách đứng trước tiêu đề mục. */
+const SectionIcon: React.FC<{
+  Icon: React.ComponentType<{ className?: string }>;
+}> = ({ Icon }) => (
+  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
+    <Icon className="h-4 w-4" />
+  </span>
+);
+
+interface StepSectionDef {
   id: string;
   Icon: React.ComponentType<{ className?: string }>;
   titleKey: string;
@@ -56,10 +83,11 @@ interface SectionDef {
   stepsKey: string;
   shotKey: string;
   noteKey: string;
-  img: string | null;
+  // Tên file ảnh (không gồm hậu tố ngôn ngữ); null = chưa có ảnh, ẩn hẳn.
+  imgBase: string | null;
 }
 
-const SECTIONS: SectionDef[] = [
+const STEP_SECTIONS: StepSectionDef[] = [
   {
     id: "app-password",
     Icon: KeyRound,
@@ -68,8 +96,8 @@ const SECTIONS: SectionDef[] = [
     stepsKey: "manual.s1Steps",
     shotKey: "manual.s1Shot",
     noteKey: "manual.s1Note",
-    // Màn hình WordPress riêng của bạn — bỏ ảnh vào /public/manual/buoc-1-wordpress.png
-    img: null,
+    // Màn hình WordPress riêng của bạn — bỏ ảnh vào buoc-1-wordpress-vi/-en.png
+    imgBase: null,
   },
   {
     id: "add-site",
@@ -79,7 +107,7 @@ const SECTIONS: SectionDef[] = [
     stepsKey: "manual.s2Steps",
     shotKey: "manual.s2Shot",
     noteKey: "manual.s2Note",
-    img: "/manual/buoc-2-them-site.png",
+    imgBase: "buoc-2-them-site",
   },
   {
     id: "write-post",
@@ -89,7 +117,7 @@ const SECTIONS: SectionDef[] = [
     stepsKey: "manual.s3Steps",
     shotKey: "manual.s3Shot",
     noteKey: "manual.s3Note",
-    img: "/manual/buoc-3-tao-bai.png",
+    imgBase: "buoc-3-tao-bai",
   },
   {
     id: "use-ai",
@@ -99,7 +127,7 @@ const SECTIONS: SectionDef[] = [
     stepsKey: "manual.s4Steps",
     shotKey: "manual.s4Shot",
     noteKey: "manual.s4Note",
-    img: "/manual/buoc-4-seo.png",
+    imgBase: "buoc-4-seo",
   },
   {
     id: "publish",
@@ -109,8 +137,60 @@ const SECTIONS: SectionDef[] = [
     stepsKey: "manual.s5Steps",
     shotKey: "manual.s5Shot",
     noteKey: "manual.s5Note",
-    // Trang Tiến độ chỉ có dữ liệu sau khi đăng bài thật — bỏ ảnh vào /public/manual/buoc-5-tien-do.png
-    img: null,
+    // Trang Tiến độ chỉ có dữ liệu sau khi đăng bài thật — bỏ ảnh vào buoc-5-tien-do-vi/-en.png
+    imgBase: null,
+  },
+];
+
+interface InfoSectionDef {
+  id: string;
+  Icon: React.ComponentType<{ className?: string }>;
+  titleKey: string;
+  introKey: string;
+  pointsKey: string;
+  noteKey: string;
+}
+
+const INFO_SECTIONS: InfoSectionDef[] = [
+  {
+    id: "safety",
+    Icon: ShieldAlert,
+    titleKey: "manual.safetyTitle",
+    introKey: "manual.safetyIntro",
+    pointsKey: "manual.safetyPoints",
+    noteKey: "manual.safetyNote",
+  },
+  {
+    id: "troubleshooting",
+    Icon: Wrench,
+    titleKey: "manual.troubleshootingTitle",
+    introKey: "manual.troubleshootingIntro",
+    pointsKey: "manual.troubleshootingPoints",
+    noteKey: "manual.troubleshootingNote",
+  },
+  {
+    id: "warranty",
+    Icon: Headset,
+    titleKey: "manual.warrantyTitle",
+    introKey: "manual.warrantyIntro",
+    pointsKey: "manual.warrantyPoints",
+    noteKey: "manual.warrantyNote",
+  },
+  {
+    id: "maintenance",
+    Icon: RefreshCw,
+    titleKey: "manual.maintenanceTitle",
+    introKey: "manual.maintenanceIntro",
+    pointsKey: "manual.maintenancePoints",
+    noteKey: "manual.maintenanceNote",
+  },
+  {
+    id: "disposal",
+    Icon: Trash2,
+    titleKey: "manual.disposalTitle",
+    introKey: "manual.disposalIntro",
+    pointsKey: "manual.disposalPoints",
+    noteKey: "manual.disposalNote",
   },
 ];
 
@@ -121,6 +201,11 @@ const TOC = [
   { id: "write-post", key: "manual.toc.writePost" },
   { id: "use-ai", key: "manual.toc.useAi" },
   { id: "publish", key: "manual.toc.publish" },
+  { id: "safety", key: "manual.toc.safety" },
+  { id: "troubleshooting", key: "manual.toc.troubleshooting" },
+  { id: "warranty", key: "manual.toc.warranty" },
+  { id: "maintenance", key: "manual.toc.maintenance" },
+  { id: "disposal", key: "manual.toc.disposal" },
   { id: "tips", key: "manual.toc.tips" },
 ];
 
@@ -138,7 +223,9 @@ const BackToTop: React.FC<{ label: string }> = ({ label }) => (
 );
 
 const GetAppPasswordPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  // Ảnh tiếng Việt khi UI là tiếng Việt, tiếng Anh khi UI là tiếng Anh.
+  const lang = i18n.language?.toLowerCase().startsWith("en") ? "en" : "vi";
 
   const overviewFlow = t("manual.overviewFlow", {
     returnObjects: true,
@@ -200,20 +287,27 @@ const GetAppPasswordPage: React.FC = () => {
               <li key={i}>{s}</li>
             ))}
           </ol>
-          <Figure src="/manual/tong-quan.png" caption={t("manual.overviewShot")} />
+          <Figure base="tong-quan" lang={lang} caption={t("manual.overviewShot")} />
         </section>
 
         {/* Các bước 1 → 5 */}
-        {SECTIONS.map(
-          ({ id, Icon, titleKey, introKey, stepsKey, shotKey, noteKey, img }) => {
+        {STEP_SECTIONS.map(
+          ({
+            id,
+            Icon,
+            titleKey,
+            introKey,
+            stepsKey,
+            shotKey,
+            noteKey,
+            imgBase,
+          }) => {
             const steps = t(stepsKey, { returnObjects: true }) as string[];
             const note = t(noteKey);
             return (
               <section key={id} id={id} className={cardClass}>
                 <h2 className="mb-3 flex items-center gap-2 text-lg font-medium text-foreground">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
-                    <Icon className="h-4 w-4" />
-                  </span>
+                  <SectionIcon Icon={Icon} />
                   {t(titleKey)}
                 </h2>
                 <p
@@ -221,7 +315,29 @@ const GetAppPasswordPage: React.FC = () => {
                   dangerouslySetInnerHTML={{ __html: t(introKey) }}
                 />
                 <Steps items={steps} />
-                <Figure src={img} caption={t(shotKey)} />
+                <Figure base={imgBase} lang={lang} caption={t(shotKey)} />
+                {note ? <NoteCallout text={note} /> : null}
+                <BackToTop label={backLabel} />
+              </section>
+            );
+          },
+        )}
+
+        {/* Các mục thông tin: an toàn, xử lý sự cố, bảo hành, bảo trì, tiêu hủy */}
+        {INFO_SECTIONS.map(
+          ({ id, Icon, titleKey, introKey, pointsKey, noteKey }) => {
+            const points = t(pointsKey, { returnObjects: true }) as string[];
+            const note = t(noteKey);
+            return (
+              <section key={id} id={id} className={cardClass}>
+                <h2 className="mb-3 flex items-center gap-2 text-lg font-medium text-foreground">
+                  <SectionIcon Icon={Icon} />
+                  {t(titleKey)}
+                </h2>
+                <p className="mb-3 text-sm leading-relaxed text-muted-foreground">
+                  {t(introKey)}
+                </p>
+                <Bullets items={points} />
                 {note ? <NoteCallout text={note} /> : null}
                 <BackToTop label={backLabel} />
               </section>
@@ -232,9 +348,7 @@ const GetAppPasswordPage: React.FC = () => {
         {/* Mẹo & lưu ý */}
         <section id="tips" className={cardClass}>
           <h2 className="mb-3 flex items-center gap-2 text-lg font-medium text-foreground">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
-              <Lightbulb className="h-4 w-4" />
-            </span>
+            <SectionIcon Icon={Lightbulb} />
             {t("manual.tipsTitle")}
           </h2>
           <ul className="list-inside list-disc space-y-2 text-sm leading-relaxed text-muted-foreground">
