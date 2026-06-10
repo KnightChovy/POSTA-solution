@@ -7,6 +7,7 @@ const post = require("./post");
 const plan = require("./plan");
 const payment = require("./payment");
 const social = require("./social");
+const socialAccounts = require("./socialAccounts");
 const seo = require("./seo");
 const authenticateJWT = require("../middleware/AuthenticateJWT");
 
@@ -22,6 +23,9 @@ function routes(app) {
 
   // AI paraphrase cho social — n8n gọi từ ngoài, không qua JWT
   app.use("/api/social", social);
+
+  // Kết nối tài khoản social (OAuth). auth-url tự yêu cầu JWT; callback public.
+  app.use("/api/social-accounts", socialAccounts);
 
   // Khu vực quản trị (tự kiểm tra admin bên trong)
   app.use("/api/admin", admin);

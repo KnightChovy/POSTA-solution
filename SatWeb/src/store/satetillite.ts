@@ -4,12 +4,19 @@ import { toast } from "react-toastify";
 
 axios.defaults.baseURL = `${import.meta.env.VITE_API_BASE_URL}`;
 
+// Nền tảng vệ tinh: WordPress (mặc định) hoặc social.
+export type Platform = "WORDPRESS" | "TWITTER" | "FACEBOOK";
+
 export interface Satellite {
   _id?: string;
-  url: string;
-  username: string;
-  password: string;
-  status: string;
+  platform?: Platform;
+  // WordPress dùng url/username/password; social để trống và dùng credentials.
+  url?: string;
+  username?: string;
+  password?: string;
+  // Social credential: TWITTER → apiKey/apiSecret/accessToken/accessSecret; FACEBOOK → pageId/pageAccessToken.
+  credentials?: Record<string, string>;
+  status?: string;
 }
 
 interface SatelliteStore {

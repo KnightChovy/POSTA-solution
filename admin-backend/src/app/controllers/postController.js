@@ -68,8 +68,8 @@ const createNewPost = async (req, res) => {
     // <p><img src="https://canho-bconssolary.com/wp-content/uploads/2025/11/0450c9c27e39c96790284.jpg" alt="0450c9c27e39c96790284.jpg" width="1280" height="960"></p>
     // <p><img src="https://canho-bconssolary.com/wp-content/uploads/2025/11/0450c9c27e39c96790284.jpg" alt="0450c9c27e39c96790284.jpg" width="1280" height="960"></p>
     // `
-    // Chỉ đếm vệ tinh ACTIVE của chính user đang đăng (đa người dùng)
-    const totalSatellite = await Satellite.countDocuments({ owner: req.user.id, status: "ACTIVE" });
+    // Tổng số site cần đăng = số WordPress người dùng đã chọn (gửi trong siteInfoWithImageUrl).
+    const totalSatellite = Object.values(siteInfoWithImageUrl).length;
 
     if (!title || !content) {
       return res
@@ -129,9 +129,22 @@ const pushToSatelliteWebsite = async (
 ) => {
   try {
     // Chỉ lấy vệ tinh ACTIVE CỦA CHỦ BÀI VIẾT — không đăng nhầm lên site của user khác
-    const satellites = await Satellite.find({ owner: newPost.owner, status: "ACTIVE" });
+    const activeSatellites = await Satellite.find({ owner: newPost.owner, status: "ACTIVE" });
+
+    // Chỉ đăng lên các site NGƯỜI DÙNG ĐÃ CHỌN (gửi lên trong siteInfoWithImageUrl).
+    // Lọc theo _id (không theo hostname) để hỗ trợ cả site social không có URL (vd Twitter).
+    // Site không được chọn sẽ bị bỏ qua hoàn toàn (không ghi nhận lỗi).
+    const selectedIds = new Set(
+      Object.values(siteInfoWithImageUrl)
+        .map((site) => site._id && String(site._id))
+        .filter(Boolean)
+    );
+    const satellites = activeSatellites.filter((s) =>
+      selectedIds.has(String(s._id))
+    );
+
     if (!satellites.length) {
-      console.warn("⚠️ No ACTIVE satellite sites found in DB.");
+      console.warn("⚠️ Không có site nào được chọn để đăng.");
       return { successfulSatelliteUrls: [], progress };
     }
 
@@ -144,8 +157,38 @@ const pushToSatelliteWebsite = async (
     // lúc enqueue (vòng for chạy tuần tự) để không bị race giữa các task song song.
     let useOriginalContent = isFirstSatellite;
 
+    // Ghi nhận 1 site lỗi vào errorSatellite của bài viết.
+    const recordError = (satelliteId, errorCode) =>
+      Post.findByIdAndUpdate(
+        newPost._id,
+        { $addToSet: { errorSatellite: { satelliteId, errorCode } } },
+        { new: true }
+      );
+
     for (const satellite of satellites) {
-      // So khớp theo hostname để bỏ qua khác biệt dấu "/" cuối hay http/https.
+      const platform = satellite.platform || "WORDPRESS";
+
+      // Social (Twitter/Facebook): đăng text thẳng, không xử lý ảnh/variation theo HTML.
+      // Nội dung HTML sẽ được chuyển sang text trong postToTwitter/postToFacebook.
+      if (platform !== "WORDPRESS") {
+        tasks.push(
+          queue.add(async () => {
+            try {
+              const post = {
+                title: newPost.title,
+                content: newPost.content,
+                status: "publish",
+              };
+              return await postToSatellite(satellite, post);
+            } catch (error) {
+              await recordError(satellite._id, errorCodeFromAxios(error));
+            }
+          })
+        );
+        continue;
+      }
+
+      // WordPress: so khớp theo hostname để bỏ qua khác biệt dấu "/" cuối hay http/https.
       // (new URL(x) ép sang chuỗi sẽ thêm "/" cuối khiến .includes() luôn fail)
       const siteMatch = Object.values(siteInfoWithImageUrl).find((site) => {
         try {
@@ -157,15 +200,7 @@ const pushToSatelliteWebsite = async (
 
       if (!siteMatch) {
         console.log(`⚠️ Không tìm thấy site tương ứng cho ${satellite.url}`);
-        await Post.findByIdAndUpdate(
-          newPost._id,
-          {
-            $addToSet: {
-              errorSatellite: { satelliteId: satellite._id, errorCode: 404 },
-            },
-          },
-          { new: true }
-        );
+        await recordError(satellite._id, 404);
         continue;
       }
 
@@ -196,18 +231,7 @@ const pushToSatelliteWebsite = async (
             const post = { title: newPost.title, content, status: "publish" };
             return await postToSatellite(satellite, post);
           } catch (error) {
-            await Post.findByIdAndUpdate(
-              newPost._id,
-              {
-                $addToSet: {
-                  errorSatellite: {
-                    satelliteId: satellite._id,
-                    errorCode: errorCodeFromAxios(error),
-                  },
-                },
-              },
-              { new: true }
-            );
+            await recordError(satellite._id, errorCodeFromAxios(error));
           }
         })
       );
@@ -249,6 +273,7 @@ const repostToErrorSatellitesOnePost = async (req, res) => {
     const errorSitesInfo = existingPost.errorSatellite;
     let siteInfoWithImageUrl = errorSitesInfo.map((site) => {
       formattedObj.push({
+        _id: site.satelliteId._id, // để pushToSatelliteWebsite lọc đúng site theo _id
         url: site.satelliteId.url,
         username: site.satelliteId.username,
         password: site.satelliteId.password,

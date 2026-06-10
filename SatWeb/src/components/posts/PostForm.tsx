@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
 import wpSites from "@/state/wpSite";
 import useProgressStore from "@/store/progress";
-import { CheckCircle, Loader2, UploadCloud, Search } from "lucide-react";
+import { CheckCircle, Loader2, UploadCloud, Search, Globe } from "lucide-react";
 import { PerformanceDisplay } from "@/components/ui/PerformanceDisplay";
 import useSatelliteStore from "@/store/satetillite";
 import { checkSitesFast } from "@/lib/utils";
@@ -35,6 +35,13 @@ import SeoPanel from "@/components/posts/SeoPanel";
 // để vẫn chạy được khi test. Key này được bảo vệ bằng Approved Domains, không phải
 // secret. Muốn đổi key sạch sẽ thì set env, khỏi sửa code.
 const TINYMCE_API_KEY = "wu0wd7sscidx08qfrcp0panj4v0sx7i5174yy8ehncu8jyhm";
+
+// Nhãn + màu badge theo nền tảng. Hiện chỉ WordPress đăng được; social đang là stub.
+const PLATFORM_META: Record<string, { label: string; badge: string }> = {
+  WORDPRESS: { label: "WordPress", badge: "bg-blue-100 text-blue-700" },
+  TWITTER: { label: "Twitter (X)", badge: "bg-sky-100 text-sky-700" },
+  FACEBOOK: { label: "Facebook", badge: "bg-indigo-100 text-indigo-700" },
+};
 
 const makeSchema = (t: TFunction) =>
   z.object({
@@ -91,36 +98,40 @@ const PostForm = ({
   const [keyword, setKeyword] = useState("");
   const [publishing, setPublishing] = useState(false);
 
-  const storeImgTemp = satellites.map((site) => {
-    return {
-      _id: site._id || "",
-      username: site.username,
-      password: site.password,
-      url: site.url,
-      status: site.status || "pending",
-      img: [] as string[],
-    };
-  });
-  const siteInfoWithImageUrl = useRef<SatelliteAccount[]>([...storeImgTemp]);
+  const didInitSelection = useRef(false);
+  const siteInfoWithImageUrl = useRef<SatelliteAccount[]>([]);
 
+  // Mặc định chọn tất cả vệ tinh (mọi nền tảng) khi tải xong — giữ hành vi fan-out cũ.
   useEffect(() => {
-    siteInfoWithImageUrl.current = [...storeImgTemp];
+    if (!didInitSelection.current && satellites.length) {
+      didInitSelection.current = true;
+      setSelectedSites(satellites.map((s) => s._id || ""));
+    }
   }, [satellites]);
 
+  // Dựng danh sách site sẽ đăng từ các site được chọn (nguồn dữ liệu gửi lên backend).
   useEffect(() => {
-    const filtered = satellites
-      .filter((site) => selectedSites.includes(site._id))
+    siteInfoWithImageUrl.current = satellites
+      .filter((site) => selectedSites.includes(site._id || ""))
       .map((site) => ({
         _id: site._id || "",
-        username: site.username,
-        password: site.password,
-        url: site.url,
+        username: site.username || "",
+        password: site.password || "",
+        url: site.url || "",
         status: site.status || "pending",
         img: [] as string[],
       }));
+  }, [selectedSites, satellites]);
 
-    siteInfoWithImageUrl.current = filtered;
-  }, [selectedSites]);
+  // Tiện ích chọn/bỏ chọn site.
+  const allSelected =
+    satellites.length > 0 && selectedSites.length === satellites.length;
+  const toggleSite = (id: string) =>
+    setSelectedSites((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  const toggleSelectAll = () =>
+    setSelectedSites(allSelected ? [] : satellites.map((s) => s._id || ""));
 
   useEffect(() => {
     getSatellite();
@@ -156,6 +167,10 @@ const PostForm = ({
   // Đăng bài thật (fan-out lên các site vệ tinh). Chỉ chạy sau khi đã chấm SEO,
   // được gọi từ nút "Đăng bài ngay" trong SeoPanel.
   const doPublish = async (values: FormValues) => {
+    if (!siteInfoWithImageUrl.current.length) {
+      toast.warning("Vui lòng chọn ít nhất 1 WordPress để đăng.");
+      return;
+    }
     setPublishing(true);
     const toastId = toast.info(t("posts.toastCloneStart"), {
       autoClose: false,
@@ -344,35 +359,60 @@ const PostForm = ({
 
   return (
     <div className="space-y-4">
-      {/* <div className="space-y-2">
-        <h1 className=" text-blue-600 text-xl font-bold m-4">
-          Chọn các site để đăng bài
-        </h1>
-        {satellites.map((site) => {
-          const checked = selectedSites.includes(site._id);
-
-          return (
-            <label
-              key={site._id}
-              className="flex items-center gap-2 p-2 border rounded cursor-pointer"
+      {/* Chọn nơi đăng bài (WordPress / Twitter / Facebook). */}
+      {satellites.length > 0 && (
+        <div className="w-full max-w-4xl mx-auto bg-white border-[2px] p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-gray-800 flex items-center gap-2">
+              <Globe className="w-4 h-4 text-amber-500" />
+              Chọn nơi đăng bài
+              <span className="text-xs font-normal text-gray-500">
+                ({selectedSites.length}/{satellites.length})
+              </span>
+            </h2>
+            <button
+              type="button"
+              onClick={toggleSelectAll}
+              className="text-sm text-amber-600 hover:underline cursor-pointer"
             >
-              <input
-                type="checkbox"
-                checked={checked}
-                onChange={() => {
-                  setSelectedSites((prev) =>
+              {allSelected ? "Bỏ chọn tất cả" : "Chọn tất cả"}
+            </button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {satellites.map((site) => {
+              const id = site._id || "";
+              const platform = site.platform || "WORDPRESS";
+              const checked = selectedSites.includes(id);
+              const meta = PLATFORM_META[platform] || PLATFORM_META.WORDPRESS;
+              return (
+                <label
+                  key={id}
+                  className={`flex items-center gap-2 p-2.5 border rounded-lg cursor-pointer transition-colors ${
                     checked
-                      ? prev.filter((id) => id !== site._id)
-                      : [...prev, site._id]
-                  );
-                }}
-              />
-
-              <span className="text-sm">{site.url}</span>
-            </label>
-          );
-        })}
-      </div> */}
+                      ? "border-amber-400 bg-amber-50"
+                      : "border-gray-200 hover:bg-gray-50"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleSite(id)}
+                    className="accent-amber-500 cursor-pointer"
+                  />
+                  <span
+                    className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${meta.badge}`}
+                  >
+                    {meta.label}
+                  </span>
+                  <span className="text-sm text-gray-700 truncate">
+                    {site.url || meta.label}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      )}
       {showMetrics && (
         <PerformanceDisplay metrics={metrics} onClear={clearMetrics} />
       )}

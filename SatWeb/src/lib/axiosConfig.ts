@@ -29,7 +29,7 @@ const refreshClient = axios.create({ baseURL });
 axios.interceptors.request.use((config) => {
   const token = tokenStore.access;
   if (token) {
-    config.headers = config.headers ?? {};
+    // axios v1: config.headers luôn là AxiosHeaders nên gán trực tiếp.
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;

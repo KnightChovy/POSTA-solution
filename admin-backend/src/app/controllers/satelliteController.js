@@ -1,6 +1,15 @@
 const Satellite = require("../models/Satellite");
 const Post = require("../models/Post");
 const Category = require("../models/Category");
+
+// Các nền tảng vệ tinh được hỗ trợ.
+const PLATFORMS = ["WORDPRESS", "TWITTER", "FACEBOOK"];
+
+// Credential bắt buộc theo từng nền tảng social (WordPress validate riêng bên dưới).
+const REQUIRED_CREDENTIALS = {
+  TWITTER: ["clientId", "clientSecret", "refreshToken"], // OAuth 2.0 user context
+  // FACEBOOK: không bắt buộc — Page lấy từ FB_PAGE_ID/FB_PAGE_ACCESS_TOKEN ở .env.
+};
 // DONE: Get all satellites
 const getAllSatellites = async (req, res) => {
   try {
@@ -16,16 +25,35 @@ const getAllSatellites = async (req, res) => {
 const addSatellite = async (req, res) => {
   try {
     console.log("Request Body:", JSON.stringify(req.body, null, 2));
-    const { url, username, password, category } = req.body;
+    const { url, username, password, category, credentials = {} } = req.body;
+    const platform = req.body.platform || "WORDPRESS";
 
-    if (!url) {
-      return res.status(400).json({ message: "URL is required" });
+    if (!PLATFORMS.includes(platform)) {
+      return res.status(400).json({ message: "Nền tảng không hợp lệ" });
     }
 
-    // Chống trùng theo từng user: 2 user khác nhau vẫn có thể dùng cùng 1 URL.
-    const existingUrl = await Satellite.findOne({ url, owner: req.user.id, status: 'ACTIVE' });
-    if (existingUrl) {
-      return res.status(400).json({ message: "Website vệ tinh đã tồn tại" });
+    if (platform === "WORDPRESS") {
+      // WordPress cần đủ url + username + Application Password.
+      if (!url || !username || !password) {
+        return res.status(400).json({
+          message: "WordPress cần URL, username và Application Password",
+        });
+      }
+      // Chống trùng theo từng user: 2 user khác nhau vẫn có thể dùng cùng 1 URL.
+      const existingUrl = await Satellite.findOne({ url, owner: req.user.id, status: 'ACTIVE' });
+      if (existingUrl) {
+        return res.status(400).json({ message: "Website vệ tinh đã tồn tại" });
+      }
+    } else {
+      // Kiểm tra credential bắt buộc theo nền tảng (Facebook không bắt buộc → [] ).
+      const missing = (REQUIRED_CREDENTIALS[platform] || []).filter(
+        (key) => !credentials[key]
+      );
+      if (missing.length) {
+        return res.status(400).json({
+          message: `Thiếu thông tin ${platform}: ${missing.join(", ")}`,
+        });
+      }
     }
 
     // Validate categories if provided
@@ -43,9 +71,12 @@ const addSatellite = async (req, res) => {
     }
 
     const newSatellite = new Satellite({
+      platform,
       url,
       username,
       password,
+      // Chỉ social mới lưu credentials; WordPress dùng url/username/password.
+      credentials: platform === "WORDPRESS" ? {} : credentials,
       category: category || [],
       owner: req.user?.id, // gắn chủ sở hữu để đếm quota website theo user
     });
@@ -126,7 +157,7 @@ const getOverallProgress = async (req, res) => {
 const updateSatellite = async (req, res) => {
   try {
     const { id } = req.params;
-    const { url, username, password } = req.body;
+    const { url, username, password, platform, credentials } = req.body;
 
     const satellite = await Satellite.findById(id);
     if (!satellite) {
@@ -137,9 +168,14 @@ const updateSatellite = async (req, res) => {
       return res.status(403).json({ message: "Bạn không có quyền sửa website vệ tinh này" });
     }
 
+    // Chỉ cập nhật field nào client gửi lên (tránh ghi đè undefined).
+    const update = { url, username, password };
+    if (platform) update.platform = platform;
+    if (credentials) update.credentials = credentials;
+
     const updatedSatellite = await Satellite.findByIdAndUpdate(
       id,
-      { url, username, password },
+      update,
       { new: true }
     );
 

@@ -2,20 +2,59 @@ import React, { useEffect, useState } from "react";
 import { ExternalLink, Eye, EyeOff, Copy, Globe, Settings } from "lucide-react";
 import useSatelliteStore from "@/store/satetillite";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
 
-const ViewSat = ({ sites: initialSites } = {}) => {
+// Badge nền tảng của vệ tinh (WordPress mặc định, hoặc social).
+const PLATFORM_BADGE: Record<string, { label: string; className: string }> = {
+  WORDPRESS: { label: "WordPress", className: "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300" },
+  TWITTER: { label: "Twitter (X)", className: "bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300" },
+  FACEBOOK: { label: "Facebook", className: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300" },
+};
+
+const PlatformBadge = ({ platform }: { platform?: string }) => {
+  const badge = PLATFORM_BADGE[platform || "WORDPRESS"] || PLATFORM_BADGE.WORDPRESS;
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${badge.className}`}
+    >
+      {badge.label}
+    </span>
+  );
+};
+
+const ViewSat = ({ sites: initialSites }: { sites?: any[] } = {}) => {
   const { t } = useTranslation();
   const [visiblePasswordId, setVisiblePasswordId] = useState<
     string | number | null
   >(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const { satellites, getSatellite } = useSatelliteStore();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     getSatellite();
   }, [getSatellite]);
+
+  // Thông báo kết quả sau khi kết nối Facebook (redirect về từ OAuth callback).
+  useEffect(() => {
+    const fb = searchParams.get("fb");
+    if (!fb) return;
+    if (fb === "connected") {
+      const pages = searchParams.get("pages");
+      toast.success(`Đã kết nối Facebook${pages ? ` (${pages} Page)` : ""}!`);
+      getSatellite();
+    } else if (fb === "error") {
+      toast.error(`Kết nối Facebook thất bại: ${searchParams.get("msg") || ""}`);
+    }
+    // Dọn query để không bắn toast lại khi refresh.
+    searchParams.delete("fb");
+    searchParams.delete("pages");
+    searchParams.delete("msg");
+    setSearchParams(searchParams, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const sites =
     Array.isArray(initialSites) && initialSites.length
@@ -81,6 +120,9 @@ const ViewSat = ({ sites: initialSites } = {}) => {
                   #
                 </th>
                 <th className="px-5 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Nền tảng
+                </th>
+                <th className="px-5 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   {t("sites.colUrl")}
                 </th>
                 <th className="px-5 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -108,6 +150,11 @@ const ViewSat = ({ sites: initialSites } = {}) => {
                   >
                     <td className="px-5 py-4 text-sm font-medium text-muted-foreground">
                       {idx + 1}
+                    </td>
+
+                    {/* Nền tảng */}
+                    <td className="px-5 py-4 text-sm">
+                      <PlatformBadge platform={s.platform} />
                     </td>
 
                     {/* URL */}
@@ -226,7 +273,7 @@ const ViewSat = ({ sites: initialSites } = {}) => {
 
               {sites.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-5 py-16 text-center">
+                  <td colSpan={7} className="px-5 py-16 text-center">
                     <div className="flex flex-col items-center">
                       <div className="p-4 rounded-full bg-secondary mb-3">
                         <Globe className="h-8 w-8 text-muted-foreground/50" />
@@ -254,6 +301,9 @@ const ViewSat = ({ sites: initialSites } = {}) => {
                 key={uid}
                 className="bg-card p-5 rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-200"
               >
+                <div className="mb-3">
+                  <PlatformBadge platform={s.platform} />
+                </div>
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
