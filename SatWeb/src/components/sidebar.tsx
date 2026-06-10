@@ -13,20 +13,22 @@ import {
   Sun,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useThemeStore } from "@/store/themeStore";
 
 const Sidebar = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const { theme, toggleTheme } = useThemeStore();
+  const { t } = useTranslation();
 
   const navItems = [
-    { to: "/dashboard", label: "Bảng điều khiển", icon: Home },
-    { to: "/create-post", label: "Đăng bài", icon: PlusSquare },
-    { to: "/progress", label: "Tiến trình", icon: List },
-    { to: "/create-site", label: "Tạo website mới", icon: Globe },
-    { to: "/viewSat", label: "Xem website", icon: Settings },
-    { to: "/help/app-password", label: "Hướng dẫn", icon: HelpCircle },
+    { to: "/dashboard", label: t("nav.dashboard"), icon: Home },
+    { to: "/create-post", label: t("nav.createPost"), icon: PlusSquare },
+    { to: "/progress", label: t("nav.progress"), icon: List },
+    { to: "/create-site", label: t("nav.createWebsite"), icon: Globe },
+    { to: "/viewSat", label: t("nav.viewWebsites"), icon: Settings },
+    { to: "/help/app-password", label: t("nav.guide"), icon: HelpCircle },
   ];
 
   return (

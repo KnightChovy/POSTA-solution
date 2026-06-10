@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   CreditCard,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/authStore";
@@ -23,6 +24,7 @@ const Navigation = () => {
   const location = useLocation();
   const { isAuthenticated, logout, user } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
+  const { t } = useTranslation();
 
   const initials =
     (user as any)?.name
@@ -40,31 +42,31 @@ const Navigation = () => {
 
   const navItems = [
     {
-      name: "Bảng điều khiển",
+      name: t("nav.dashboard"),
       path: "/dashboard",
       icon: <LayoutDashboard className="h-4 w-4" />,
       action: () => navigate("/dashboard"),
     },
     {
-      name: "Thêm website vệ tinh",
+      name: t("nav.addSatellite"),
       path: "/create-site",
       icon: <SquarePlus className="h-4 w-4" />,
       action: () => navigate("/create-site"),
     },
     {
-      name: "Quản lý website",
+      name: t("nav.manageWebsites"),
       path: "/viewSat",
       icon: <FolderKanban className="h-4 w-4" />,
       action: () => navigate("/viewSat"),
     },
     {
-      name: "Gói dịch vụ",
+      name: t("nav.servicePlans"),
       path: "/pricing",
       icon: <CreditCard className="h-4 w-4" />,
       action: () => navigate("/pricing"),
     },
     {
-      name: "Hướng dẫn",
+      name: t("nav.guide"),
       path: "/help/app-password",
       icon: <FolderPen className="h-4 w-4" />,
       action: () => navigate("/help/app-password"),
@@ -73,7 +75,7 @@ const Navigation = () => {
 
   if ((user as any)?.isAdmin) {
     navItems.push({
-      name: "Quản trị",
+      name: t("nav.admin"),
       path: "/admin",
       icon: <ShieldCheck className="h-4 w-4" />,
       action: () => navigate("/admin"),
@@ -87,7 +89,7 @@ const Navigation = () => {
         <button
           onClick={() => navigate("/")}
           className="flex items-center gap-3 cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-          aria-label="Về trang chủ POSTA"
+          aria-label={t("nav.backToHome")}
         >
           <div className="flex items-center justify-center w-9 h-9 rounded-xl overflow-hidden bg-white shadow-lg shadow-orange-500/25 ring-1 ring-orange-200/60">
             <img
@@ -147,7 +149,7 @@ const Navigation = () => {
               className="flex items-center gap-2 cursor-pointer"
             >
               <LogIn className="h-4 w-4" />
-              Đăng nhập
+              {t("nav.login")}
             </Button>
           ) : (
             <>
@@ -155,13 +157,13 @@ const Navigation = () => {
               <button
                 onClick={() => navigate("/profile")}
                 className="flex items-center gap-2 rounded-lg px-2 py-1.5 cursor-pointer transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                aria-label="Hồ sơ cá nhân"
+                aria-label={t("nav.profile")}
               >
                 <span className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary ring-1 ring-primary/20">
                   {initials}
                 </span>
                 <span className="hidden lg:block max-w-[120px] truncate text-sm font-medium text-foreground">
-                  {(user as any)?.name || "Tài khoản"}
+                  {(user as any)?.name || t("nav.account")}
                 </span>
               </button>
               <Button
@@ -170,7 +172,7 @@ const Navigation = () => {
                 className="flex items-center gap-2 cursor-pointer text-muted-foreground hover:text-destructive"
               >
                 <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Đăng xuất</span>
+                <span className="hidden sm:inline">{t("nav.logout")}</span>
               </Button>
             </>
           )}

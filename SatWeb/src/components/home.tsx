@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   FileText,
   Plus,
@@ -37,17 +38,23 @@ import useSatelliteStore from "@/store/satetillite";
 const POSTA_LOGO = "/logo-3.png";
 const POSTA_TVC = "/tvc-posta.mp4";
 
-/** Lời chào theo thời điểm trong ngày — chạm cảm xúc, vẫn tiếng Việt. */
-const getGreeting = () => {
+/** Lời chào theo thời điểm trong ngày — trả về key i18n. */
+const getGreetingKey = () => {
   const hour = new Date().getHours();
-  if (hour < 11) return "Chào buổi sáng";
-  if (hour < 14) return "Chào buổi trưa";
-  if (hour < 18) return "Chào buổi chiều";
-  return "Chào buổi tối";
+  if (hour < 11) return "dashboard.greetingMorning";
+  if (hour < 14) return "dashboard.greetingNoon";
+  if (hour < 18) return "dashboard.greetingAfternoon";
+  return "dashboard.greetingEvening";
 };
 
 /** Vòng tròn tiến trình vẽ bằng SVG thuần — không thêm thư viện chart. */
-const SuccessRing = ({ value }: { value: number }) => {
+const SuccessRing = ({
+  value,
+  label,
+}: {
+  value: number;
+  label: string;
+}) => {
   const radius = 52;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (value / 100) * circumference;
@@ -77,7 +84,7 @@ const SuccessRing = ({ value }: { value: number }) => {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-3xl font-bold text-foreground">{value}%</span>
-        <span className="text-xs text-muted-foreground">thành công</span>
+        <span className="text-xs text-muted-foreground">{label}</span>
       </div>
     </div>
   );
@@ -131,6 +138,7 @@ const StatCard = ({
 
 const Home = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [videoOpen, setVideoOpen] = useState(false);
 
   const {
@@ -172,36 +180,36 @@ const Home = () => {
 
   const stats = [
     {
-      title: "Tổng số bài viết",
+      title: t("dashboard.totalPosts"),
       value: posts.length,
-      description: "Bài viết trong hệ thống",
+      description: t("dashboard.totalPostsDesc"),
       icon: FileText,
       iconBg: "bg-amber-50 dark:bg-amber-950/50",
       iconColor: "text-amber-600 dark:text-amber-400",
       borderColor: "border-l-amber-500",
     },
     {
-      title: "Đăng thành công",
+      title: t("dashboard.publishedSuccess"),
       value: published,
-      description: "Lượt xuất bản thành công",
+      description: t("dashboard.publishedSuccessDesc"),
       icon: CheckCircle2,
       iconBg: "bg-emerald-50 dark:bg-emerald-950/50",
       iconColor: "text-emerald-600 dark:text-emerald-400",
       borderColor: "border-l-emerald-500",
     },
     {
-      title: "Đăng thất bại",
+      title: t("dashboard.publishedFailed"),
       value: errors,
-      description: "Lượt cần kiểm tra lại",
+      description: t("dashboard.publishedFailedDesc"),
       icon: XCircle,
       iconBg: "bg-red-50 dark:bg-red-950/50",
       iconColor: "text-red-600 dark:text-red-400",
       borderColor: "border-l-red-500",
     },
     {
-      title: "Website vệ tinh",
+      title: t("dashboard.satelliteSites"),
       value: activeSites,
-      description: "Đang hoạt động",
+      description: t("dashboard.satelliteSitesDesc"),
       icon: Globe,
       iconBg: "bg-blue-50 dark:bg-blue-950/50",
       iconColor: "text-blue-600 dark:text-blue-400",
@@ -211,20 +219,20 @@ const Home = () => {
 
   const quickActions = [
     {
-      title: "Thêm website vệ tinh",
-      description: "Kết nối thêm site WordPress mới",
+      title: t("dashboard.actionAddSiteTitle"),
+      description: t("dashboard.actionAddSiteDesc"),
       icon: SquarePlus,
       path: "/create-site",
     },
     {
-      title: "Quản lý website",
-      description: "Xem & chỉnh sửa các vệ tinh",
+      title: t("dashboard.actionManageSiteTitle"),
+      description: t("dashboard.actionManageSiteDesc"),
       icon: FolderKanban,
       path: "/viewSat",
     },
     {
-      title: "Hướng dẫn lấy mật khẩu",
-      description: "Tạo Application Password WordPress",
+      title: t("dashboard.actionAppPasswordTitle"),
+      description: t("dashboard.actionAppPasswordDesc"),
       icon: BookOpen,
       path: "/help/app-password",
     },
@@ -242,7 +250,7 @@ const Home = () => {
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-md ring-1 ring-orange-200/60 dark:ring-orange-900/40">
                   <img
                     src={POSTA_LOGO}
-                    alt="Logo POSTA"
+                    alt={t("dashboard.logoAlt")}
                     className="h-9 w-9 object-contain"
                   />
                 </div>
@@ -252,22 +260,21 @@ const Home = () => {
                   </p>
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 dark:text-amber-300">
                     <Sparkles className="h-3 w-3" />
-                    Bảng điều khiển đăng bài vệ tinh
+                    {t("dashboard.brandTagline")}
                   </span>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-                  {getGreeting()}, Admin
+                  {t("dashboard.greeting", { greeting: t(getGreetingKey()) })}
                 </h1>
                 <p className="max-w-xl text-sm sm:text-base text-muted-foreground leading-relaxed">
-                  Soạn bài một lần, đăng đồng loạt lên{" "}
+                  {t("dashboard.heroDescriptionBefore")}{" "}
                   <span className="font-semibold text-foreground">
                     {activeSites}
                   </span>{" "}
-                  website vệ tinh đang hoạt động. Nội dung được viết lại bằng AI
-                  để tránh trùng lặp.
+                  {t("dashboard.heroDescriptionAfter")}
                 </p>
               </div>
 
@@ -277,7 +284,7 @@ const Home = () => {
                   className="h-11 gap-2 px-6 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/30 transition-all duration-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
                 >
                   <Plus className="h-4 w-4" />
-                  Tạo bài viết
+                  {t("dashboard.createPost")}
                 </Button>
                 <Button
                   variant="outline"
@@ -285,7 +292,7 @@ const Home = () => {
                   className="h-11 gap-2 px-6 border-border bg-card/60 backdrop-blur-sm hover:bg-secondary text-foreground transition-all duration-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
                 >
                   <Globe className="h-4 w-4" />
-                  Quản lý website
+                  {t("dashboard.manageSites")}
                 </Button>
               </div>
             </div>
@@ -293,14 +300,17 @@ const Home = () => {
             {/* Thẻ kính hiển thị tỷ lệ thành công */}
             <div className="flex items-center justify-center rounded-2xl border border-white/40 dark:border-slate-700/50 bg-white/70 dark:bg-slate-900/50 backdrop-blur-xl p-6 shadow-md">
               <div className="flex flex-col items-center gap-3">
-                <SuccessRing value={successRate} />
+                <SuccessRing
+                  value={successRate}
+                  label={t("dashboard.success")}
+                />
                 <div className="flex items-center gap-4 text-center">
                   <div>
                     <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
                       {published}
                     </p>
                     <p className="text-[11px] text-muted-foreground">
-                      Thành công
+                      {t("dashboard.success")}
                     </p>
                   </div>
                   <div className="h-8 w-px bg-border" />
@@ -309,7 +319,7 @@ const Home = () => {
                       {errors}
                     </p>
                     <p className="text-[11px] text-muted-foreground">
-                      Thất bại
+                      {t("dashboard.failed")}
                     </p>
                   </div>
                 </div>
@@ -340,28 +350,27 @@ const Home = () => {
             <div className="space-y-3 text-white">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold backdrop-blur-sm">
                 <Play className="h-3 w-3 fill-current" />
-                TVC giới thiệu
+                {t("dashboard.tvcBadge")}
               </span>
               <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-                Câu chuyện thương hiệu POSTA
+                {t("dashboard.tvcTitle")}
               </h2>
               <p className="max-w-lg text-sm sm:text-base text-white/85 leading-relaxed">
-                Khám phá cách POSTA giúp bạn nhân bản nội dung và phủ sóng hàng
-                loạt website vệ tinh chỉ trong một lần đăng.
+                {t("dashboard.tvcDescription")}
               </p>
               <Button
                 onClick={() => setVideoOpen(true)}
                 className="mt-1 h-11 gap-2 px-6 bg-white text-orange-600 hover:bg-orange-50 font-semibold shadow-lg transition-all duration-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-orange-600"
               >
                 <PlayCircle className="h-5 w-5" />
-                Xem TVC
+                {t("dashboard.watchTvc")}
               </Button>
             </div>
 
             {/* Khung xem trước — bấm để mở video */}
             <button
               onClick={() => setVideoOpen(true)}
-              aria-label="Phát TVC giới thiệu POSTA"
+              aria-label={t("dashboard.playTvcAria")}
               className="group relative hidden md:flex h-44 w-72 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-black/30 ring-1 ring-white/30 backdrop-blur-sm cursor-pointer transition-all duration-300 hover:ring-white/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
               <span className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.15),transparent_70%)]" />
@@ -387,10 +396,10 @@ const Home = () => {
                   </div>
                   <div>
                     <CardTitle className="text-foreground text-lg">
-                      Danh sách bài viết
+                      {t("dashboard.postListTitle")}
                     </CardTitle>
                     <CardDescription className="text-muted-foreground">
-                      Quản lý và theo dõi tiến trình xuất bản
+                      {t("dashboard.postListDesc")}
                     </CardDescription>
                   </div>
                 </div>
@@ -401,7 +410,7 @@ const Home = () => {
                   className="hidden sm:flex gap-1.5 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/50 cursor-pointer focus-visible:ring-2 focus-visible:ring-amber-400"
                 >
                   <Plus className="h-4 w-4" />
-                  Tạo mới
+                  {t("dashboard.createNew")}
                 </Button>
               </div>
             </CardHeader>
@@ -421,10 +430,10 @@ const Home = () => {
                   </div>
                   <div>
                     <CardTitle className="text-foreground text-lg">
-                      Sức khỏe hệ thống
+                      {t("dashboard.systemHealthTitle")}
                     </CardTitle>
                     <CardDescription className="text-muted-foreground">
-                      Tổng quan hiệu suất đăng bài
+                      {t("dashboard.systemHealthDesc")}
                     </CardDescription>
                   </div>
                 </div>
@@ -433,7 +442,7 @@ const Home = () => {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">
-                      Tỷ lệ thành công
+                      {t("dashboard.successRate")}
                     </span>
                     <span className="font-semibold text-foreground tabular-nums">
                       {successRate}%
@@ -454,22 +463,30 @@ const Home = () => {
                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                         <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
                       </span>
-                      <span className="text-xs font-medium">Hoạt động</span>
+                      <span className="text-xs font-medium">
+                        {t("dashboard.active")}
+                      </span>
                     </div>
                     <p className="mt-1 text-2xl font-bold text-foreground tabular-nums">
                       {activeSites}
                     </p>
-                    <p className="text-xs text-muted-foreground">vệ tinh</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("dashboard.satellites")}
+                    </p>
                   </div>
                   <div className="rounded-xl border border-border bg-secondary/40 p-3">
                     <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
                       <FileText className="h-3.5 w-3.5" />
-                      <span className="text-xs font-medium">Bài viết</span>
+                      <span className="text-xs font-medium">
+                        {t("dashboard.posts")}
+                      </span>
                     </div>
                     <p className="mt-1 text-2xl font-bold text-foreground tabular-nums">
                       {posts.length}
                     </p>
-                    <p className="text-xs text-muted-foreground">đã soạn</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("dashboard.drafted")}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -479,10 +496,10 @@ const Home = () => {
             <Card className="border border-border shadow-sm overflow-hidden animate-rise">
               <CardHeader className="border-b border-border">
                 <CardTitle className="text-foreground text-lg">
-                  Lối tắt
+                  {t("dashboard.shortcuts")}
                 </CardTitle>
                 <CardDescription className="text-muted-foreground">
-                  Truy cập nhanh các tác vụ thường dùng
+                  {t("dashboard.shortcutsDesc")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-3">
@@ -517,7 +534,9 @@ const Home = () => {
       {/* Modal phát TVC — video chỉ tải khi mở (tiết kiệm băng thông) */}
       <Dialog open={videoOpen} onOpenChange={setVideoOpen}>
         <DialogContent className="max-w-3xl border-none bg-black p-0 overflow-hidden">
-          <DialogTitle className="sr-only">TVC giới thiệu POSTA</DialogTitle>
+          <DialogTitle className="sr-only">
+            {t("dashboard.tvcDialogTitle")}
+          </DialogTitle>
           {videoOpen && (
             <video
               src={POSTA_TVC}
@@ -526,7 +545,7 @@ const Home = () => {
               autoPlay
               className="h-auto w-full rounded-lg"
             >
-              Trình duyệt của bạn không hỗ trợ phát video.
+              {t("dashboard.videoNotSupported")}
             </video>
           )}
         </DialogContent>

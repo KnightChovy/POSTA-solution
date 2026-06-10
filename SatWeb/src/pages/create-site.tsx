@@ -8,14 +8,16 @@ import * as z from "zod";
 import { Globe, Lock, User } from "lucide-react";
 import useSatelliteStore, { Satellite } from "@/store/satetillite";
 import { useParams } from "react-router";
+import { useTranslation } from "react-i18next";
 
-const settingsSchema = z.object({
-  url: z.string().url("URL không hợp lệ"),
-  username: z.string(),
-  password: z.string(),
-});
+const makeSettingsSchema = (t: (key: string) => string) =>
+  z.object({
+    url: z.string().url(t("sites.invalidUrl")),
+    username: z.string(),
+    password: z.string(),
+  });
 
-type SettingsFormData = z.infer<typeof settingsSchema>;
+type SettingsFormData = z.infer<ReturnType<typeof makeSettingsSchema>>;
 
 interface SettingsFormProps {
   initialData: SettingsFormData;
@@ -23,6 +25,8 @@ interface SettingsFormProps {
 }
 
 const CreateSite = () => {
+  const { t } = useTranslation();
+  const settingsSchema = makeSettingsSchema(t);
   const {
     getSatellite,
     satellites,
@@ -87,13 +91,11 @@ const CreateSite = () => {
               <Globe className="w-5 h-5 text-white" />
             </div>
             <h1 className="text-2xl font-bold text-foreground">
-              {sat ? "Chỉnh sửa website vệ tinh" : "Thêm website vệ tinh mới"}
+              {sat ? t("sites.editTitle") : t("sites.addTitle")}
             </h1>
           </div>
           <p className="text-muted-foreground text-sm ml-12">
-            {sat
-              ? "Cập nhật thông tin cấu hình cho website vệ tinh."
-              : "Nhập thông tin cấu hình cho website vệ tinh cần thêm."}
+            {sat ? t("sites.editSubtitle") : t("sites.addSubtitle")}
           </p>
         </div>
 
@@ -123,7 +125,7 @@ const CreateSite = () => {
                     name="password"
                     label="Application Password"
                     type="password"
-                    placeholder="Nhập Application password từ WordPress"
+                    placeholder={t("sites.passwordPlaceholder")}
                     disabled={!editMode}
                   />
                 </div>
@@ -136,7 +138,7 @@ const CreateSite = () => {
                     variant="outline"
                     className="px-5 border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-all duration-200"
                   >
-                    {editMode ? "Hủy" : "Chỉnh sửa"}
+                    {editMode ? t("sites.cancel") : t("sites.edit")}
                   </Button>
 
                   {editMode && (
@@ -144,7 +146,7 @@ const CreateSite = () => {
                       type="submit"
                       className="px-5 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white shadow-md shadow-amber-500/25 transition-all duration-200"
                     >
-                      {sat ? "Cập nhật" : "Thêm mới"}
+                      {sat ? t("sites.update") : t("sites.create")}
                     </Button>
                   )}
                 </div>

@@ -3,6 +3,8 @@ import axios from "axios";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { toast } from "react-toastify";
 import postStore from "@/store/postStore";
 import { Editor } from "@tinymce/tinymce-react";
@@ -32,20 +34,21 @@ import SeoPanel from "@/components/posts/SeoPanel";
 // sửa code. Set trong SatWeb/.env (local) và Environment trên Vercel (production).
 const TINYMCE_API_KEY = import.meta.env.VITE_TINYMCE_API_KEY as string;
 
-const formSchema = z.object({
-  title: z
-    .string()
-    .min(1, { message: "Tiêu đề không được để trống" })
-    .max(100, { message: "Tiêu đề phải ít hơn 100 ký tự" }),
-  content: z.string().min(1, { message: "Nội dung không được để trống" }),
-  link: z
-    .string()
-    .url({ message: "Vui lòng nhập URL hợp lệ" })
-    .or(z.string().length(0)),
-  image: z.string().optional(),
-});
+const makeSchema = (t: TFunction) =>
+  z.object({
+    title: z
+      .string()
+      .min(1, { message: t("posts.errTitleRequired") })
+      .max(100, { message: t("posts.errTitleMax") }),
+    content: z.string().min(1, { message: t("posts.errContentRequired") }),
+    link: z
+      .string()
+      .url({ message: t("posts.errUrlInvalid") })
+      .or(z.string().length(0)),
+    image: z.string().optional(),
+  });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<ReturnType<typeof makeSchema>>;
 
 interface PostFormProps {
   initialValues?: FormValues;
@@ -66,6 +69,7 @@ const PostForm = ({
   isEditing = false,
 }: PostFormProps) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [showMetrics, setShowMetrics] = useState(false);
   const [uploading, setUploading] = useState(false);
   const { addPost } = postStore();
@@ -143,7 +147,7 @@ const PostForm = ({
   };
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(makeSchema(t)),
     defaultValues,
   });
 
@@ -151,13 +155,13 @@ const PostForm = ({
   // được gọi từ nút "Đăng bài ngay" trong SeoPanel.
   const doPublish = async (values: FormValues) => {
     setPublishing(true);
-    const toastId = toast.info("🔄 Bắt đầu clone bài viết...", {
+    const toastId = toast.info(t("posts.toastCloneStart"), {
       autoClose: false,
     });
 
     setProgress({
       status: "in-progress",
-      message: "Đang gửi yêu cầu tạo bài viết...",
+      message: t("posts.progressSending"),
       percent: 10,
     });
 
@@ -192,9 +196,9 @@ const PostForm = ({
       await new Promise((res) => setTimeout(res, delay));
     };
 
-    await fakeStep("Đang xử lý nội dung bài viết...", 25);
-    await fakeStep("Đang tải ảnh và dữ liệu...", 45);
-    await fakeStep("Gửi yêu cầu đến máy chủ...", 65);
+    await fakeStep(t("posts.progressProcessing"), 25);
+    await fakeStep(t("posts.progressLoadingAssets"), 45);
+    await fakeStep(t("posts.progressSendingServer"), 65);
 
     try {
       const formData = new FormData();
@@ -213,18 +217,18 @@ const PostForm = ({
       const data = response.data;
       const { newPost } = data;
       if (data.successfulSatelliteUrls.length === 0) {
-        toast.error("Không thể tạo bài viết trên bất kỳ trang vệ tinh nào.", {
+        toast.error(t("posts.createNoSite"), {
           autoClose: 5000,
         });
       } else {
-        toast.success("Tạo bài viết thành công!", { autoClose: 3000 });
+        toast.success(t("posts.createSuccess"), { autoClose: 3000 });
       }
       addPost(newPost);
       navigate("/progress", { state: { newPost: newPost } });
       return newPost;
     } catch (error) {
       toast.dismiss(toastId);
-      toast.error("Tạo bài viết thất bại!", { autoClose: 3000 });
+      toast.error(t("posts.createFailed"), { autoClose: 3000 });
     } finally {
       setUploading(false);
       setPublishing(false);
@@ -240,9 +244,7 @@ const PostForm = ({
       keyword: keyword.trim(),
     });
     if (result) {
-      toast.info(
-        `Đã chấm điểm SEO: ${result.score}/100. Xem đánh giá bên dưới rồi bấm "Đăng bài ngay".`
-      );
+      toast.info(t("posts.seoScored", { score: result.score }));
     }
   };
 
@@ -251,7 +253,7 @@ const PostForm = ({
     const title = form.getValues("title");
     const content = form.getValues("content");
     if (!content?.trim()) {
-      toast.warning("Nội dung đang trống, chưa thể chấm điểm SEO.");
+      toast.warning(t("posts.seoEmptyContent"));
       return;
     }
     // keyword để trống -> AI tự nhận diện từ khóa chính.
@@ -284,7 +286,7 @@ const PostForm = ({
     if (result.title) {
       form.setValue("title", result.title, { shouldValidate: true });
     }
-    toast.success("Đã tối ưu nội dung chuẩn SEO!");
+    toast.success(t("posts.seoOptimized"));
     // Chấm lại để người dùng thấy điểm mới ngay.
     await evaluate({
       title: result.title || title,
@@ -311,7 +313,7 @@ const PostForm = ({
     const res = await axios.post(`/api/image/upload`, formData, {
       withCredentials: true,
     });
-    if (!res.data?.url) throw new Error("Upload ảnh thất bại");
+    if (!res.data?.url) throw new Error(t("posts.uploadFailed"));
     return res.data.url as string;
   };
 
@@ -328,7 +330,7 @@ const PostForm = ({
           const url = await uploadImageToServer(file, file.name);
           callback(url, { alt: file.name });
         } catch (err) {
-          toast.error("Upload ảnh thất bại. Vui lòng thử lại.");
+          toast.error(t("posts.uploadRetry"));
         }
       };
 
@@ -381,11 +383,11 @@ const PostForm = ({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tiêu đề</FormLabel>
+                  <FormLabel>{t("posts.titleLabel")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Nhập tiêu đề bài viết" {...field} />
+                    <Input placeholder={t("posts.titlePlaceholder")} {...field} />
                   </FormControl>
-                  <FormDescription>Tiêu đề của bài viết</FormDescription>
+                  <FormDescription>{t("posts.titleDescription")}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -396,7 +398,7 @@ const PostForm = ({
               name="content"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nội dung</FormLabel>
+                  <FormLabel>{t("posts.contentLabel")}</FormLabel>
                   <FormControl>
                     <Editor
                       apiKey={TINYMCE_API_KEY}
@@ -461,10 +463,10 @@ const PostForm = ({
 
             {/* Từ khóa SEO + nút chấm điểm */}
             <div className="space-y-2 pt-4 border-t">
-              <FormLabel>Từ khóa SEO (tùy chọn)</FormLabel>
+              <FormLabel>{t("posts.seoKeywordLabel")}</FormLabel>
               <div className="flex gap-2">
                 <Input
-                  placeholder="Để trống thì AI tự nhận diện từ khóa chính"
+                  placeholder={t("posts.seoKeywordPlaceholder")}
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                 />
@@ -480,12 +482,11 @@ const PostForm = ({
                   ) : (
                     <Search className="w-4 h-4 mr-2" />
                   )}
-                  Kiểm tra SEO
+                  {t("posts.checkSeoButton")}
                 </Button>
               </div>
               <FormDescription>
-                Không bắt buộc — để trống thì AI tự tìm từ khóa chính khi chấm
-                điểm và tối ưu nội dung.
+                {t("posts.seoKeywordDescription")}
               </FormDescription>
             </div>
 
@@ -499,7 +500,7 @@ const PostForm = ({
                   resetSeo();
                 }}
               >
-                Hủy
+                {t("posts.cancelButton")}
               </Button>
               <Button
                 disabled={uploading || evaluating || publishing}
@@ -509,12 +510,12 @@ const PostForm = ({
                 {evaluating ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Đang chấm điểm...
+                    {t("posts.scoringInProgress")}
                   </>
                 ) : isEditing ? (
-                  "Lưu thay đổi"
+                  t("posts.saveChanges")
                 ) : (
-                  "Chấm điểm SEO & chuẩn bị đăng"
+                  t("posts.scorePrepareButton")
                 )}
               </Button>
             </div>

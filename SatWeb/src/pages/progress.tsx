@@ -10,7 +10,7 @@ import { toast } from "react-toastify";
 import useProgressStore from "@/store/progress";
 import { stripHtmlTags } from "@/lib/utils";
 import useSatelliteStore from "@/store/satetillite";
-import { get } from "http";
+import { useTranslation } from "react-i18next";
 
 type SiteStatus = "pending" | "in-progress" | "success" | "failed";
 
@@ -25,6 +25,7 @@ interface Site {
 }
 
 const ProgressPage = () => {
+  const { t } = useTranslation();
   const [sites, setSites] = useState<Site[]>([]);
   const [overallProgress, setOverallProgress] = useState(0);
   const [activeFilter, setActiveFilter] = useState<SiteStatus | "all">("all");
@@ -99,24 +100,24 @@ const ProgressPage = () => {
   }, [realPostv2, satelliteUrls]);
 
   const restartPublishing = async () => {
-    toast.info("Đang làm mới dữ liệu...");
+    toast.info(t("dashboard.refreshingData"));
     await getPost();
   };
 
   const getErrorMessage = (code: number) => {
     switch (code) {
       case 400:
-        return "Yêu cầu không hợp lệ.";
+        return t("dashboard.error400");
       case 401:
-        return "Chưa xác thực.";
+        return t("dashboard.error401");
       case 403:
-        return "Bị cấm truy cập.";
+        return t("dashboard.error403");
       case 404:
-        return "Không tìm thấy trang web.";
+        return t("dashboard.error404");
       case 500:
-        return "Lỗi máy chủ nội bộ.";
+        return t("dashboard.error500");
       default:
-        return "Lỗi không xác định.";
+        return t("dashboard.errorUnknown");
     }
   };
 
@@ -136,19 +137,19 @@ const ProgressPage = () => {
   };
 
   const handleRepost = async (id) => {
-    toast.info("Đang gửi lại bài viết...");
+    toast.info(t("dashboard.resendingPost"));
 
     const result = await rePost(id);
 
     if (result) {
-      toast.success("Đã gửi lại bài viết thành công!");
+      toast.success(t("dashboard.resendSuccess"));
 
       const updated = await getPostById(realPost._id);
       if (updated) {
         setRealPostv2(updated);
       }
     } else {
-      toast.error("Gửi lại bài viết thất bại.");
+      toast.error(t("dashboard.resendFailed"));
     }
   };
 
@@ -159,9 +160,9 @@ const ProgressPage = () => {
           <div className="p-4 rounded-full bg-gray-50 inline-block mb-3">
             <Clock className="h-8 w-8 text-gray-300" />
           </div>
-          <p className="text-gray-500 font-medium">Không có dữ liệu</p>
+          <p className="text-gray-500 font-medium">{t("dashboard.noData")}</p>
           <p className="text-gray-400 text-sm mt-1">
-            Đã xảy ra lỗi hoặc không có trang vệ tinh để hiển thị.
+            {t("dashboard.noDataDesc")}
           </p>
         </div>
       ) : (
@@ -191,7 +192,7 @@ const ProgressPage = () => {
               <div>
                 <h3 className="font-medium text-foreground">{site.name}</h3>
                 <p className="text-xs text-muted-foreground">
-                  Cập nhật {site.updatedAt.toLocaleTimeString()}
+                  {t("dashboard.updated")} {site.updatedAt.toLocaleTimeString()}
                 </p>
                 <a
                   href={site.url}
@@ -226,10 +227,10 @@ const ProgressPage = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">
-                  Tiến trình xuất bản
+                  {t("dashboard.publishProgressTitle")}
                 </h1>
                 <p className="text-muted-foreground text-sm">
-                  Theo dõi trạng thái đăng bài lên các website vệ tinh
+                  {t("dashboard.publishProgressSubtitle")}
                 </p>
               </div>
             </div>
@@ -238,7 +239,7 @@ const ProgressPage = () => {
               className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white shadow-md shadow-amber-500/25"
             >
               <RefreshCw className="h-4 w-4" />
-              Đăng lại bài viết
+              {t("dashboard.repostArticle")}
             </Button>
           </div>
 
@@ -246,7 +247,7 @@ const ProgressPage = () => {
           <Card className="border border-border shadow-sm overflow-hidden bg-card">
             <CardHeader className="bg-secondary/50 border-b border-border">
               <CardTitle className="text-lg text-foreground">
-                Bài viết đã chọn
+                {t("dashboard.selectedPost")}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-5">
@@ -270,7 +271,7 @@ const ProgressPage = () => {
                   )}
                 </div>
               ) : (
-                <p className="text-muted-foreground">Chưa chọn bài viết</p>
+                <p className="text-muted-foreground">{t("dashboard.noPostSelected")}</p>
               )}
             </CardContent>
           </Card>
@@ -279,20 +280,20 @@ const ProgressPage = () => {
           <Card className="border border-border shadow-sm overflow-hidden bg-card">
             <CardHeader className="bg-secondary/50 border-b border-border">
               <CardTitle className="text-lg text-foreground">
-                Tiến trình tổng thể
+                {t("dashboard.overallProgress")}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-5">
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-semibold text-foreground">
-                    {overallProgress
-                      ? `${overallProgress}% Hoàn thành`
-                      : "0% Hoàn thành"}
+                    {t("dashboard.percentComplete", {
+                      percent: overallProgress || 0,
+                    })}
                   </span>
                   <span className="text-sm text-muted-foreground bg-secondary px-2 py-1 rounded-full">
                     {sites.filter((s) => s.status === "success").length} /{" "}
-                    {sites.length} sites
+                    {sites.length} {t("dashboard.sitesUnit")}
                   </span>
                 </div>
                 <Progress
@@ -307,7 +308,7 @@ const ProgressPage = () => {
           <Card className="border border-border shadow-sm overflow-hidden bg-card">
             <CardHeader className="bg-secondary/50 border-b border-border">
               <CardTitle className="text-lg text-foreground">
-                Website vệ tinh
+                {t("dashboard.satelliteSites")}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-5">
@@ -321,21 +322,23 @@ const ProgressPage = () => {
                     value="all"
                     className="rounded-md data-[state=active]:bg-card data-[state=active]:shadow-sm"
                   >
-                    Tất cả ({sites.length})
+                    {t("dashboard.tabAll", { count: sites.length })}
                   </TabsTrigger>
                   <TabsTrigger
                     value="success"
                     className="rounded-md data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-emerald-600 dark:data-[state=active]:text-emerald-400"
                   >
-                    Thành công (
-                    {sites.filter((s) => s.status === "success").length})
+                    {t("dashboard.tabSuccess", {
+                      count: sites.filter((s) => s.status === "success").length,
+                    })}
                   </TabsTrigger>
                   <TabsTrigger
                     value="failed"
                     className="rounded-md data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-red-600 dark:data-[state=active]:text-red-400"
                   >
-                    Thất bại (
-                    {sites.filter((s) => s.status === "failed").length})
+                    {t("dashboard.tabFailed", {
+                      count: sites.filter((s) => s.status === "failed").length,
+                    })}
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value={activeFilter}>

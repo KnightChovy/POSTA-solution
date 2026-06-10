@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -18,6 +19,7 @@ interface AuthShellProps {
  */
 const AuthShell = ({ title, subtitle, children }: AuthShellProps) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <div className="grid min-h-screen bg-background lg:grid-cols-2">
@@ -34,14 +36,14 @@ const AuthShell = ({ title, subtitle, children }: AuthShellProps) => {
           className="absolute left-6 top-6 inline-flex cursor-pointer items-center gap-2 rounded-lg bg-background/80 px-3 py-1.5 text-sm font-semibold text-foreground backdrop-blur-sm transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
           <ArrowLeft className="size-4" />
-          Về trang chủ
+          {t("auth.backToHome")}
         </button>
         <div className="absolute bottom-8 left-8 right-8">
           <p className="text-2xl font-extrabold text-white">
-            Đăng một lần, phủ sóng hàng trăm website.
+            {t("auth.bannerTitle")}
           </p>
           <p className="mt-2 text-sm text-white/80">
-            Tự động hóa đăng bài vệ tinh — tiết kiệm thời gian, giảm chi phí, mở rộng nhanh hơn.
+            {t("auth.bannerSubtitle")}
           </p>
         </div>
       </div>
@@ -53,10 +55,10 @@ const AuthShell = ({ title, subtitle, children }: AuthShellProps) => {
             <button
               onClick={() => navigate("/")}
               className="flex cursor-pointer items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              aria-label="POSTA trang chủ"
+              aria-label={t("auth.postaHome")}
             >
               <span className="flex size-10 items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-primary/20">
-                <img src={POSTA_LOGO} alt="Logo POSTA" className="size-8 object-contain" />
+                <img src={POSTA_LOGO} alt={t("auth.logoAlt")} className="size-8 object-contain" />
               </span>
               <span className="text-2xl font-extrabold tracking-tight text-foreground">POSTA</span>
             </button>

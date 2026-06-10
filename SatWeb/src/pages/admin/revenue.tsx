@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Wallet, TrendingUp, CheckCircle2, Clock, Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import useAdminStore from "@/store/adminStore";
@@ -6,14 +7,21 @@ import useAdminStore from "@/store/adminStore";
 const vnd = (n: number) => new Intl.NumberFormat("vi-VN").format(n) + "đ";
 const monthLabel = (m: string) => `Th${Number(m.split("-")[1])}`;
 
-const STATUS_META: Record<string, { label: string; cls: string }> = {
-  paid: { label: "Đã thanh toán", cls: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
-  pending: { label: "Chờ thanh toán", cls: "bg-amber-500/10 text-amber-600 dark:text-amber-400" },
-  failed: { label: "Thất bại", cls: "bg-destructive/10 text-destructive" },
+const STATUS_CLS: Record<string, string> = {
+  paid: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  pending: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  failed: "bg-destructive/10 text-destructive",
 };
 
 export default function AdminRevenue() {
+  const { t } = useTranslation();
   const { stats, transactions, loading, getStats, getTransactions } = useAdminStore();
+
+  const STATUS_META: Record<string, { label: string; cls: string }> = {
+    paid: { label: t("admin.txPaid"), cls: STATUS_CLS.paid },
+    pending: { label: t("admin.txPending"), cls: STATUS_CLS.pending },
+    failed: { label: t("admin.txFailed"), cls: STATUS_CLS.failed },
+  };
   const [status, setStatus] = useState("");
   const [search, setSearch] = useState("");
 
@@ -38,18 +46,18 @@ export default function AdminRevenue() {
 
   const cards = stats
     ? [
-        { label: "Tổng doanh thu", value: vnd(stats.totalRevenue), icon: TrendingUp },
-        { label: "Doanh thu/tháng (MRR)", value: vnd(stats.mrr), icon: Wallet },
-        { label: "Giao dịch đã thu", value: paidCount, icon: CheckCircle2 },
-        { label: "Đang chờ", value: pendingCount, icon: Clock },
+        { label: t("admin.totalRevenue"), value: vnd(stats.totalRevenue), icon: TrendingUp },
+        { label: t("admin.mrr"), value: vnd(stats.mrr), icon: Wallet },
+        { label: t("admin.collectedTransactions"), value: paidCount, icon: CheckCircle2 },
+        { label: t("admin.pendingTransactions"), value: pendingCount, icon: Clock },
       ]
     : [];
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Quản lý doanh thu</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Thống kê doanh thu và toàn bộ giao dịch.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("admin.revenueTitle")}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t("admin.revenueSubtitle")}</p>
       </div>
 
       {/* Stat cards */}
@@ -72,7 +80,7 @@ export default function AdminRevenue() {
       {/* Biểu đồ doanh thu */}
       {stats && (
         <div className="mb-6 rounded-xl border border-primary/15 bg-card p-6 shadow-sm">
-          <h2 className="mb-5 text-base font-bold text-foreground">Doanh thu 6 tháng gần nhất</h2>
+          <h2 className="mb-5 text-base font-bold text-foreground">{t("admin.revenueLast6Months")}</h2>
           <div className="flex h-44 items-end justify-between gap-3">
             {stats.revenueByMonth.map((r) => (
               <div key={r.month} className="flex flex-1 flex-col items-center gap-2">
@@ -94,10 +102,10 @@ export default function AdminRevenue() {
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="flex gap-2">
           {[
-            { v: "", l: "Tất cả" },
-            { v: "paid", l: "Đã thu" },
-            { v: "pending", l: "Đang chờ" },
-            { v: "failed", l: "Thất bại" },
+            { v: "", l: t("admin.filterAll") },
+            { v: "paid", l: t("admin.filterPaid") },
+            { v: "pending", l: t("admin.filterPending") },
+            { v: "failed", l: t("admin.filterFailed") },
           ].map((s) => (
             <button
               key={s.v}
@@ -116,7 +124,7 @@ export default function AdminRevenue() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm theo người dùng..."
+              placeholder={t("admin.searchByUserPlaceholder")}
               className="h-10 pl-10 focus-visible:ring-primary"
             />
           </div>
@@ -130,17 +138,17 @@ export default function AdminRevenue() {
             <Loader2 className="size-6 animate-spin text-primary" />
           </div>
         ) : transactions.length === 0 ? (
-          <p className="p-8 text-center text-sm text-muted-foreground">Chưa có giao dịch nào.</p>
+          <p className="p-8 text-center text-sm text-muted-foreground">{t("admin.noTransactions")}</p>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-secondary/40 text-left text-xs uppercase text-muted-foreground">
-                <th className="px-4 py-3 font-semibold">Người dùng</th>
-                <th className="px-4 py-3 font-semibold">Gói</th>
-                <th className="px-4 py-3 font-semibold">Mã CK</th>
-                <th className="px-4 py-3 text-right font-semibold">Số tiền</th>
-                <th className="px-4 py-3 font-semibold">Trạng thái</th>
-                <th className="px-4 py-3 text-right font-semibold">Thời gian</th>
+                <th className="px-4 py-3 font-semibold">{t("admin.colUser")}</th>
+                <th className="px-4 py-3 font-semibold">{t("admin.colPlan")}</th>
+                <th className="px-4 py-3 font-semibold">{t("admin.colReference")}</th>
+                <th className="px-4 py-3 text-right font-semibold">{t("admin.colAmount")}</th>
+                <th className="px-4 py-3 font-semibold">{t("admin.colStatus")}</th>
+                <th className="px-4 py-3 text-right font-semibold">{t("admin.colTime")}</th>
               </tr>
             </thead>
             <tbody>

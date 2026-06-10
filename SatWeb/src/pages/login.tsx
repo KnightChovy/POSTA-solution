@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { Loader2, MailWarning } from "lucide-react";
 import { LoginForm } from "@/components/auth/LoginForm";
@@ -20,6 +21,7 @@ export default function LoginPage() {
   const [resending, setResending] = useState(false);
   const { isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const login = useAuthStore((state) => state.login);
 
   // Đã đăng nhập thì chuyển vào bảng điều khiển
@@ -40,14 +42,14 @@ export default function LoginPage() {
         if ((response as any).needVerify) {
           setNeedVerifyEmail(credentials.username);
         }
-        toast.error(response.message || "Đăng nhập thất bại!");
+        toast.error(response.message || t("auth.loginFailed"));
       } else {
-        toast.success("Đăng nhập thành công!");
+        toast.success(t("auth.loginSuccess"));
         navigate("/dashboard");
       }
     } catch (error) {
       console.error("Login error:", error);
-      toast.error("Có lỗi xảy ra, vui lòng thử lại!");
+      toast.error(t("auth.errorGeneric"));
     } finally {
       setIsLoading(false);
     }
@@ -59,21 +61,21 @@ export default function LoginPage() {
     try {
       const res = await resendVerificationService(needVerifyEmail);
       if (res?.error) {
-        toast.error(res.message || "Gửi lại thất bại.");
+        toast.error(res.message || t("auth.resendFailed"));
       } else {
         toast.success(
-          res.message || "Đã gửi lại email xác thực. Vui lòng kiểm tra hộp thư."
+          res.message || t("auth.resendSuccess")
         );
       }
     } catch {
-      toast.error("Có lỗi xảy ra, vui lòng thử lại.");
+      toast.error(t("auth.errorGeneric"));
     } finally {
       setResending(false);
     }
   };
 
   return (
-    <AuthShell title="Chào mừng trở lại" subtitle="Đăng nhập để quản lý hệ thống POSTA của bạn">
+    <AuthShell title={t("auth.loginTitle")} subtitle={t("auth.loginSubtitle")}>
       <LoginForm onSubmit={handleLogin} isLoading={isLoading} />
 
       {needVerifyEmail && (
@@ -81,8 +83,8 @@ export default function LoginPage() {
           <div className="flex items-start gap-2.5">
             <MailWarning className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400" />
             <p className="text-sm text-amber-800 dark:text-amber-200">
-              Tài khoản <strong>{needVerifyEmail}</strong> chưa được xác thực. Hãy kiểm tra hộp
-              thư, hoặc gửi lại email xác thực bên dưới.
+              {t("auth.needVerifyPrefix")} <strong>{needVerifyEmail}</strong>{" "}
+              {t("auth.needVerifySuffix")}
             </p>
           </div>
           <Button
@@ -92,7 +94,7 @@ export default function LoginPage() {
             className="w-full cursor-pointer gap-2 border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-800 dark:text-amber-200 dark:hover:bg-amber-900/30"
           >
             {resending && <Loader2 className="size-4 animate-spin" />}
-            Gửi lại email xác thực
+            {t("auth.resendVerification")}
           </Button>
         </div>
       )}

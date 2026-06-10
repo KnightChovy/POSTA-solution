@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PostForm from "@/components/posts/PostForm";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, PenLine } from "lucide-react";
@@ -13,6 +14,7 @@ import { Post } from "../../index";
 
 const CreatePost = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleCreatePost = (values: any) => {
     const newPost: Post = {
@@ -33,12 +35,11 @@ const CreatePost = () => {
               <PenLine className="w-5 h-5 text-white" />
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-              Tạo bài viết mới
+              {t("posts.createTitle")}
             </h1>
           </div>
           <p className="text-muted-foreground ml-12">
-            Tạo nội dung với hình ảnh để xuất bản trên các website vệ tinh của
-            bạn.
+            {t("posts.createSubtitle")}
           </p>
         </div>
 
