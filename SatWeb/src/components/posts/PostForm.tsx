@@ -28,9 +28,13 @@ import { checkSitesFast } from "@/lib/utils";
 import useSeoStore from "@/store/seoStore";
 import SeoPanel from "@/components/posts/SeoPanel";
 
-// Key TinyMCE (cloud) đọc từ env -> dùng key của bạn, đổi domain/khoá không phải
-// sửa code. Set trong SatWeb/.env (local) và Environment trên Vercel (production).
-const TINYMCE_API_KEY = import.meta.env.VITE_TINYMCE_API_KEY as string;
+// Key TinyMCE (cloud): ưu tiên đọc từ env (VITE_TINYMCE_API_KEY), nếu chưa set
+// (vd trên Vercel/preview chưa cấu hình env) thì fallback về key hardcode dưới đây
+// để vẫn chạy được khi test. Key này được bảo vệ bằng Approved Domains, không phải
+// secret. Muốn đổi key sạch sẽ thì set env, khỏi sửa code.
+const TINYMCE_API_KEY =
+  (import.meta.env.VITE_TINYMCE_API_KEY as string) ||
+  "wu0wd7sscidx08qfrcp0panj4v0sx7i5174yy8ehncu8jyhm";
 
 const formSchema = z.object({
   title: z
