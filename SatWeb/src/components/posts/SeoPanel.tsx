@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   CheckCircle2,
   AlertTriangle,
@@ -65,6 +66,7 @@ const SeoPanel = ({
   onPublish,
   publishing = false,
 }: SeoPanelProps) => {
+  const { t } = useTranslation();
   const { score, grade, keyword, summary, checks, suggestions } = evaluation;
 
   return (
@@ -72,7 +74,7 @@ const SeoPanel = ({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Sparkles className="w-5 h-5 text-amber-500" />
-          Đánh giá SEO
+          {t("posts.seoPanelTitle")}
         </CardTitle>
       </CardHeader>
 
@@ -98,7 +100,7 @@ const SeoPanel = ({
               {keyword && (
                 <Badge variant="outline" className="text-xs gap-1">
                   <Tag className="w-3 h-3" />
-                  Từ khóa: {keyword}
+                  {t("posts.keywordBadge", { keyword })}
                 </Badge>
               )}
             </div>
@@ -109,18 +111,21 @@ const SeoPanel = ({
         {/* Chỉ số đo nhanh */}
         {metrics && (
           <div className="flex flex-wrap gap-2">
-            <MetricChip label="Số từ" value={String(metrics.wordCount)} />
             <MetricChip
-              label="Mật độ KW"
+              label={t("posts.metricWordCount")}
+              value={String(metrics.wordCount)}
+            />
+            <MetricChip
+              label={t("posts.metricKeywordDensity")}
               value={`${metrics.keywordDensity}%`}
             />
             <MetricChip
-              label="KW/Tiêu đề"
-              value={metrics.keywordInTitle ? "Có" : "Không"}
+              label={t("posts.metricKeywordInTitle")}
+              value={metrics.keywordInTitle ? t("posts.yes") : t("posts.no")}
             />
-            <MetricChip label="H2" value={String(metrics.h2Count)} />
+            <MetricChip label={t("posts.metricH2")} value={String(metrics.h2Count)} />
             <MetricChip
-              label="Ảnh thiếu alt"
+              label={t("posts.metricImagesMissingAlt")}
               value={String(metrics.imagesMissingAlt)}
             />
           </div>
@@ -147,7 +152,7 @@ const SeoPanel = ({
         {suggestions.length > 0 && (
           <div className="space-y-1.5">
             <p className="text-sm font-semibold text-foreground">
-              Gợi ý cải thiện
+              {t("posts.suggestionsTitle")}
             </p>
             <ul className="list-disc pl-5 space-y-1">
               {suggestions.map((s, i) => (
@@ -172,12 +177,12 @@ const SeoPanel = ({
               {optimizing ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Đang tối ưu...
+                  {t("posts.optimizingInProgress")}
                 </>
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 mr-2" />
-                  Tối ưu lại chuẩn SEO
+                  {t("posts.optimizeButton")}
                 </>
               )}
             </Button>
@@ -192,20 +197,19 @@ const SeoPanel = ({
                 {publishing ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Đang đăng...
+                    {t("posts.publishingInProgress")}
                   </>
                 ) : (
                   <>
                     <Send className="w-4 h-4 mr-2" />
-                    Đăng bài ngay
+                    {t("posts.publishNowButton")}
                   </>
                 )}
               </Button>
             )}
           </div>
           <p className="text-xs text-muted-foreground">
-            "Tối ưu lại" sẽ viết lại nội dung trong trình soạn thảo (giữ nguyên
-            ảnh và cấu trúc HTML). Xem điểm rồi bấm "Đăng bài ngay" để xuất bản.
+            {t("posts.actionsHint")}
           </p>
         </div>
       </CardContent>

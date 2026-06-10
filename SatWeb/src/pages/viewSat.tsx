@@ -3,8 +3,10 @@ import { ExternalLink, Eye, EyeOff, Copy, Globe, Settings } from "lucide-react";
 import useSatelliteStore from "@/store/satetillite";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const ViewSat = ({ sites: initialSites } = {}) => {
+  const { t } = useTranslation();
   const [visiblePasswordId, setVisiblePasswordId] = useState<
     string | number | null
   >(null);
@@ -55,10 +57,10 @@ const ViewSat = ({ sites: initialSites } = {}) => {
             </div>
             <div>
               <h2 className="text-xl font-bold text-foreground">
-                Website vệ tinh
+                {t("sites.pageTitle")}
               </h2>
               <p className="text-sm text-muted-foreground">
-                Quản lý danh sách các website kết nối
+                {t("sites.pageSubtitle")}
               </p>
             </div>
           </div>
@@ -66,7 +68,7 @@ const ViewSat = ({ sites: initialSites } = {}) => {
             asChild
             className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white shadow-md shadow-amber-500/25"
           >
-            <Link to="/create-site">Thêm website mới</Link>
+            <Link to="/create-site">{t("sites.addNew")}</Link>
           </Button>
         </div>
 
@@ -79,19 +81,19 @@ const ViewSat = ({ sites: initialSites } = {}) => {
                   #
                 </th>
                 <th className="px-5 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  URL
+                  {t("sites.colUrl")}
                 </th>
                 <th className="px-5 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Username
+                  {t("sites.colUsername")}
                 </th>
                 <th className="px-5 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Password
+                  {t("sites.colPassword")}
                 </th>
                 <th className="px-5 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Chi tiết
+                  {t("sites.colDetail")}
                 </th>
                 <th className="px-5 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Thao tác
+                  {t("sites.colAction")}
                 </th>
               </tr>
             </thead>
@@ -122,13 +124,13 @@ const ViewSat = ({ sites: initialSites } = {}) => {
                         <button
                           onClick={() => handleCopy(s.url, `url-${uid}`)}
                           className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                          title="Copy URL"
+                          title={t("sites.copyUrl")}
                         >
                           <Copy className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                         </button>
                         {copiedId === `url-${uid}` && (
                           <span className="text-xs text-emerald-600 font-medium">
-                            Copied!
+                            {t("sites.copied")}
                           </span>
                         )}
                       </div>
@@ -143,13 +145,13 @@ const ViewSat = ({ sites: initialSites } = {}) => {
                         <button
                           onClick={() => handleCopy(s.username, `user-${uid}`)}
                           className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                          title="Copy username"
+                          title={t("sites.copyUsername")}
                         >
                           <Copy className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                         </button>
                         {copiedId === `user-${uid}` && (
                           <span className="text-xs text-emerald-600 font-medium">
-                            Copied!
+                            {t("sites.copied")}
                           </span>
                         )}
                       </div>
@@ -168,8 +170,8 @@ const ViewSat = ({ sites: initialSites } = {}) => {
                           className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
                           title={
                             visiblePasswordId === uid
-                              ? "Ẩn mật khẩu"
-                              : "Hiện mật khẩu"
+                              ? t("sites.hidePassword")
+                              : t("sites.showPassword")
                           }
                         >
                           {visiblePasswordId === uid ? (
@@ -181,13 +183,13 @@ const ViewSat = ({ sites: initialSites } = {}) => {
                         <button
                           onClick={() => handleCopy(s.password, `pass-${uid}`)}
                           className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                          title="Copy password"
+                          title={t("sites.copyPassword")}
                         >
                           <Copy className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                         </button>
                         {copiedId === `pass-${uid}` && (
                           <span className="text-xs text-emerald-600 font-medium">
-                            Copied!
+                            {t("sites.copied")}
                           </span>
                         )}
                       </div>
@@ -203,7 +205,7 @@ const ViewSat = ({ sites: initialSites } = {}) => {
                       >
                         <Link to={`/viewSat/${uid}`}>
                           <Settings className="h-4 w-4 mr-1.5" />
-                          Chi tiết
+                          {t("sites.colDetail")}
                         </Link>
                       </Button>
                     </td>
@@ -215,7 +217,7 @@ const ViewSat = ({ sites: initialSites } = {}) => {
                         className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-border rounded-lg bg-card hover:bg-secondary hover:border-border transition-all duration-200"
                       >
                         <ExternalLink className="h-4 w-4" />
-                        Mở site
+                        {t("sites.openSite")}
                       </button>
                     </td>
                   </tr>
@@ -230,10 +232,10 @@ const ViewSat = ({ sites: initialSites } = {}) => {
                         <Globe className="h-8 w-8 text-muted-foreground/50" />
                       </div>
                       <p className="text-foreground font-medium">
-                        Chưa có website vệ tinh nào
+                        {t("sites.emptyTitle")}
                       </p>
                       <p className="text-muted-foreground text-sm mt-1">
-                        Thêm website đầu tiên để bắt đầu
+                        {t("sites.emptySubtitle")}
                       </p>
                     </div>
                   </td>
@@ -255,7 +257,7 @@ const ViewSat = ({ sites: initialSites } = {}) => {
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Username
+                      {t("sites.colUsername")}
                     </span>
                     <p className="font-medium text-foreground">{s.username}</p>
                   </div>
@@ -264,12 +266,12 @@ const ViewSat = ({ sites: initialSites } = {}) => {
                     className="text-amber-600 dark:text-amber-400 text-sm flex items-center gap-1 font-medium"
                   >
                     <ExternalLink className="h-4 w-4" />
-                    Mở
+                    {t("sites.open")}
                   </button>
                 </div>
                 <div className="text-sm mb-3">
                   <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    URL
+                    {t("sites.colUrl")}
                   </span>
                   <a
                     href={s.url}
@@ -282,7 +284,7 @@ const ViewSat = ({ sites: initialSites } = {}) => {
                 </div>
                 <div className="text-sm mb-4">
                   <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Password
+                    {t("sites.colPassword")}
                   </span>
                   <div className="flex items-center gap-2 mt-0.5">
                     <code className="bg-secondary px-2 py-1 rounded-lg text-muted-foreground font-mono text-xs">
@@ -306,7 +308,7 @@ const ViewSat = ({ sites: initialSites } = {}) => {
                     size="sm"
                     className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800"
                   >
-                    <Link to={`/viewSat/${uid}`}>Xem chi tiết</Link>
+                    <Link to={`/viewSat/${uid}`}>{t("sites.viewDetail")}</Link>
                   </Button>
                 </div>
               </div>
@@ -319,10 +321,10 @@ const ViewSat = ({ sites: initialSites } = {}) => {
                 <Globe className="h-8 w-8 text-gray-300" />
               </div>
               <p className="text-gray-500 font-medium">
-                Chưa có website vệ tinh nào
+                {t("sites.emptyTitle")}
               </p>
               <p className="text-gray-400 text-sm mt-1">
-                Thêm website đầu tiên để bắt đầu
+                {t("sites.emptySubtitle")}
               </p>
             </div>
           )}

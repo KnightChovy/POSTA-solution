@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -43,6 +44,7 @@ const PostTable = ({
   onPublish = () => {},
 }: PostTableProps) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
@@ -72,13 +74,13 @@ const PostTable = ({
           <TableHeader>
             <TableRow className="bg-secondary/50 border-b border-border">
               <TableHead className="min-w-[200px] font-semibold text-muted-foreground text-xs uppercase tracking-wider py-4">
-                Tiêu đề
+                {t("posts.colTitle")}
               </TableHead>
               <TableHead className="min-w-[300px] font-semibold text-muted-foreground text-xs uppercase tracking-wider py-4">
-                Nội dung
+                {t("posts.colContent")}
               </TableHead>
               <TableHead className="min-w-[150px] font-semibold text-muted-foreground text-xs uppercase tracking-wider py-4">
-                Thao tác
+                {t("posts.colActions")}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -95,10 +97,10 @@ const PostTable = ({
                     </div>
                     <div>
                       <p className="font-medium text-gray-600">
-                        Chưa có bài viết nào
+                        {t("posts.emptyTitle")}
                       </p>
                       <p className="text-sm text-gray-400 mt-1">
-                        Tạo bài viết đầu tiên để bắt đầu
+                        {t("posts.emptySubtitle")}
                       </p>
                     </div>
                   </div>
@@ -127,7 +129,7 @@ const PostTable = ({
                               variant="outline"
                               className="text-xs bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800"
                             >
-                              Có hình ảnh
+                              {t("posts.hasImages")}
                             </Badge>
                           </div>
                         )}
@@ -140,7 +142,7 @@ const PostTable = ({
                         onClick={() => handlePublish(post)}
                         className="h-9 px-4 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-white shadow-sm hover:shadow-md transition-all duration-200 gap-2"
                       >
-                        <span>Xem tiến trình</span>
+                        <span>{t("posts.viewProgress")}</span>
                         <ArrowRight className="h-3.5 w-3.5" />
                       </Button>
                     </TableCell>

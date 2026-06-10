@@ -1,6 +1,7 @@
 import { useAuthStore } from "@/store/authStore";
 import { ReactNode, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 
 interface ProtectedRouteProps {
@@ -10,13 +11,14 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuthStore();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      toast.warning("Bạn cần đăng nhập để truy cập trang này!");
+      toast.warning(t("auth.loginRequired"));
       navigate("/login", { replace: true });
     }
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [isAuthenticated, isLoading, navigate, t]);
 
   // Hiển thị loading khi đang kiểm tra authentication
   if (isLoading) {
@@ -24,7 +26,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Đang kiểm tra đăng nhập...</p>
+          <p className="text-muted-foreground">{t("auth.checkingAuth")}</p>
         </div>
       </div>
     );

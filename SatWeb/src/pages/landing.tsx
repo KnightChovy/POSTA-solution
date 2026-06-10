@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   ChevronRight,
@@ -11,8 +11,10 @@ import {
   LayoutGrid,
   BarChart3,
   LayoutDashboard,
-  FileText,
-  TrendingUp,
+  CheckCircle2,
+  Play,
+  PlayCircle,
+  Maximize2,
 } from "lucide-react";
 import {
   Accordion,
@@ -36,6 +38,8 @@ import PricingSection from "@/components/landing/PricingSection";
 
 const POSTA_LOGO = "/logo-3.png";
 const POSTA_COVER = "/cover-posta.jpg";
+const POSTA_ABOUT = "/posta.jpg";
+const POSTA_TVC = "/tvc-posta.mp4";
 const CTA_MOTION = "transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]";
 
 // Phần cấu trúc (không dịch): ảnh + số liệu mẫu. Tiêu đề/mô tả lấy từ i18n theo `seed`.
@@ -57,15 +61,13 @@ const REASONS = [
   { key: "track", icon: BarChart3 },
 ];
 
-type TopicSeed = (typeof TRENDING)[number];
-
 const Landing = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { theme, toggleTheme } = useThemeStore();
   const { isAuthenticated, user } = useAuthStore();
   const [email, setEmail] = useState("");
-  const [selected, setSelected] = useState<TopicSeed | null>(null);
+  const [videoOpen, setVideoOpen] = useState(false);
 
   const lang = i18n.language?.startsWith("en") ? "en" : "vi";
   const changeLang = (value: string) => i18n.changeLanguage(value);
@@ -208,6 +210,116 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* ===== GIỚI THIỆU DỰ ÁN ===== */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid items-center gap-10 lg:grid-cols-2">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+              <Rocket className="size-3.5" />
+              {t("landing.aboutBadge")}
+            </span>
+            <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+              {t("landing.aboutTitle")}
+            </h2>
+            <p className="mt-5 text-base leading-relaxed text-muted-foreground sm:text-lg">
+              {t("landing.aboutLead")}
+            </p>
+            <ul className="mt-6 flex flex-col gap-3">
+              {["aboutPoint1", "aboutPoint2", "aboutPoint3"].map((k) => (
+                <li key={k} className="flex items-start gap-3 text-foreground">
+                  <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-primary" />
+                  <span className="text-sm sm:text-base">{t(`landing.${k}`)}</span>
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => navigate(startTo)}
+              className={cn(
+                "mt-8 inline-flex h-12 items-center gap-1.5 rounded-md bg-primary px-7 text-base font-bold text-primary-foreground cursor-pointer shadow-sm",
+                CTA_MOTION
+              )}
+            >
+              {t("landing.aboutCta")}
+              <ChevronRight className="size-5" />
+            </button>
+          </div>
+          <div className="relative overflow-hidden rounded-2xl border border-primary/15 shadow-md">
+            <img
+              src={POSTA_ABOUT}
+              alt={t("landing.aboutTitle")}
+              loading="lazy"
+              className="aspect-[4/3] size-full object-cover"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ===== TVC GIỚI THIỆU (cinematic, video căn giữa) ===== */}
+      <section className="relative overflow-hidden border-y border-primary/10 bg-gradient-to-b from-background via-accent/30 to-background">
+        {/* Quầng sáng cam tạo chiều sâu */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 top-0 h-72 w-[44rem] max-w-full -translate-x-1/2 rounded-full bg-orange-500/20 blur-3xl"
+        />
+        <div className="relative mx-auto max-w-5xl px-4 py-20 text-center sm:px-6">
+          <span className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1 text-xs font-semibold text-orange-600 dark:text-orange-400">
+            <Play className="size-3 fill-current" />
+            {t("dashboard.tvcBadge")}
+          </span>
+          <h2 className="mx-auto mt-4 max-w-2xl text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+            {t("dashboard.tvcTitle")}
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+            {t("dashboard.tvcDescription")}
+          </p>
+
+          {/* Khung phát cinematic 16:9 — bấm để mở rộng */}
+          <div className="group relative mx-auto mt-10 aspect-video w-full max-w-4xl overflow-hidden rounded-2xl border border-primary/15 bg-black shadow-2xl ring-1 ring-orange-500/25">
+            <img
+              src={POSTA_COVER}
+              alt={t("dashboard.tvcTitle")}
+              loading="lazy"
+              className="size-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-black/40 transition-opacity duration-300 group-hover:from-black/65" />
+
+            {/* Nút play lớn — mở modal phát video */}
+            <button
+              onClick={() => setVideoOpen(true)}
+              aria-label={t("dashboard.playTvcAria")}
+              className="absolute inset-0 flex cursor-pointer items-center justify-center focus-visible:outline-none"
+            >
+              <span className="flex size-20 items-center justify-center rounded-full bg-white/95 text-orange-600 shadow-2xl ring-4 ring-white/30 transition-transform duration-200 group-hover:scale-105 group-focus-visible:ring-orange-400 sm:size-24">
+                <Play className="size-9 translate-x-1 fill-current sm:size-11" />
+              </span>
+            </button>
+
+            {/* Thời lượng (góc trái dưới) */}
+            <span className="pointer-events-none absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-md bg-black/55 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
+              <PlayCircle className="size-3.5" />
+              {t("landing.tvcDuration")}
+            </span>
+
+            {/* Phóng to (góc phải dưới) */}
+            <button
+              onClick={() => setVideoOpen(true)}
+              className="absolute bottom-3 right-3 inline-flex cursor-pointer items-center gap-1.5 rounded-md bg-black/55 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm transition-colors duration-200 hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              <Maximize2 className="size-3.5" />
+              {t("landing.tvcExpand")}
+            </button>
+          </div>
+
+          <Button
+            onClick={() => setVideoOpen(true)}
+            className="mt-8 h-12 gap-2 bg-gradient-to-r from-orange-500 to-red-600 px-7 text-base font-bold text-white shadow-lg transition-all duration-200 cursor-pointer hover:from-orange-600 hover:to-red-700 focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2"
+          >
+            <PlayCircle className="size-5" />
+            {t("dashboard.watchTvc")}
+          </Button>
+        </div>
+      </section>
+
       {/* ===== CHỦ ĐỀ THỊNH HÀNH ===== */}
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <h2 className="mb-6 text-2xl font-bold tracking-tight text-foreground">
@@ -220,11 +332,11 @@ const Landing = () => {
                 key={item.seed}
                 className="basis-1/2 pl-4 sm:basis-1/3 md:basis-1/4 lg:basis-1/5"
               >
-                <button
-                  onClick={() => setSelected(item)}
-                  className="group block w-full cursor-pointer text-left"
+                <Link
+                  to={`/topics/${item.seed}`}
+                  className="group block h-full w-full cursor-pointer text-left focus-visible:outline-none"
                 >
-                  <div className="relative aspect-[3/4] overflow-hidden rounded-xl border border-primary/15 shadow-sm transition-colors duration-200 group-hover:border-primary/40">
+                  <div className="relative aspect-[3/4] overflow-hidden rounded-xl border border-primary/15 shadow-sm transition-colors duration-200 group-hover:border-primary/40 group-focus-visible:ring-2 group-focus-visible:ring-primary">
                     <img
                       src={`https://picsum.photos/seed/posta-${item.seed}/300/400`}
                       alt={t(`landing.trending.${item.seed}.title`)}
@@ -234,11 +346,20 @@ const Landing = () => {
                     <span className="absolute left-2 top-2 flex size-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground shadow-md">
                       {i + 1}
                     </span>
+                    {/* Lớp phủ + nội dung mô tả ngay trên ảnh */}
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent p-3 pt-8">
+                      <p className="line-clamp-3 text-xs leading-relaxed text-white/90">
+                        {t(`landing.trending.${item.seed}.desc`)}
+                      </p>
+                    </div>
                   </div>
-                  <p className="mt-2 truncate text-sm font-semibold text-foreground group-hover:text-primary">
-                    {t(`landing.trending.${item.seed}.title`)}
-                  </p>
-                </button>
+                  <div className="mt-2 flex items-center gap-1">
+                    <p className="truncate text-sm font-semibold text-foreground group-hover:text-primary">
+                      {t(`landing.trending.${item.seed}.title`)}
+                    </p>
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-primary" />
+                  </div>
+                </Link>
               </CarouselItem>
             ))}
           </CarouselContent>
@@ -349,54 +470,19 @@ const Landing = () => {
         </div>
       </footer>
 
-      {/* Modal nội dung chủ đề */}
-      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <DialogContent className="max-w-lg overflow-hidden p-0">
-          {selected && (
-            <>
-              <div className="relative h-44 w-full overflow-hidden">
-                <img
-                  src={`https://picsum.photos/seed/posta-${selected.seed}/800/360`}
-                  alt={t(`landing.trending.${selected.seed}.title`)}
-                  className="size-full object-cover"
-                />
-                <span className="absolute left-4 top-4 inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground shadow-md">
-                  <TrendingUp className="size-3.5" />
-                  {t("landing.trendingBadge")}
-                </span>
-              </div>
-              <div className="flex flex-col gap-4 p-6">
-                <DialogTitle className="text-xl font-bold text-foreground">
-                  {t(`landing.trending.${selected.seed}.title`)}
-                </DialogTitle>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {t(`landing.trending.${selected.seed}.desc`)}
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-lg border border-primary/15 bg-secondary/40 p-3">
-                    <div className="flex items-center gap-1.5 text-primary">
-                      <FileText className="size-4" />
-                      <span className="text-xs font-semibold">{t("landing.statsPosts")}</span>
-                    </div>
-                    <p className="mt-1 text-xl font-extrabold text-foreground">{selected.posts}</p>
-                  </div>
-                  <div className="rounded-lg border border-primary/15 bg-secondary/40 p-3">
-                    <div className="flex items-center gap-1.5 text-primary">
-                      <Globe className="size-4" />
-                      <span className="text-xs font-semibold">{t("landing.statsSites")}</span>
-                    </div>
-                    <p className="mt-1 text-xl font-extrabold text-foreground">{selected.sites}</p>
-                  </div>
-                </div>
-                <Button
-                  onClick={() => navigate(startTo)}
-                  className={cn("mt-1 w-full cursor-pointer gap-1.5", CTA_MOTION)}
-                >
-                  {t("landing.ctaTopic")}
-                  <ChevronRight className="size-4" />
-                </Button>
-              </div>
-            </>
+      {/* Modal phát TVC — gần full màn hình, video chỉ tải khi mở (tiết kiệm băng thông) */}
+      <Dialog open={videoOpen} onOpenChange={setVideoOpen}>
+        <DialogContent className="w-[96vw] max-w-[min(96vw,1400px)] overflow-hidden border-0 bg-black p-0 shadow-2xl">
+          <DialogTitle className="sr-only">{t("dashboard.tvcDialogTitle")}</DialogTitle>
+          {videoOpen && (
+            <video
+              src={POSTA_TVC}
+              controls
+              autoPlay
+              className="aspect-video max-h-[88vh] w-full bg-black"
+            >
+              {t("dashboard.videoNotSupported")}
+            </video>
           )}
         </DialogContent>
       </Dialog>

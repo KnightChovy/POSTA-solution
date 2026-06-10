@@ -1,4 +1,5 @@
 import { ReactNode, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -17,14 +18,15 @@ import { useAuthStore } from "@/store/authStore";
 import { useThemeStore } from "@/store/themeStore";
 
 const NAV = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/admin/users", label: "Người dùng", icon: Users, end: false },
-  { to: "/admin/revenue", label: "Doanh thu", icon: Wallet, end: false },
-  { to: "/admin/plans", label: "Gói dịch vụ", icon: Package, end: false },
+  { to: "/admin", labelKey: "admin.navDashboard", icon: LayoutDashboard, end: true },
+  { to: "/admin/users", labelKey: "admin.navUsers", icon: Users, end: false },
+  { to: "/admin/revenue", labelKey: "admin.navRevenue", icon: Wallet, end: false },
+  { to: "/admin/plans", labelKey: "admin.navPlans", icon: Package, end: false },
 ];
 
 // Layout riêng cho khu quản trị: sidebar trái, không dùng thanh điều hướng của user.
 const AdminLayout = ({ children }: { children: ReactNode }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
@@ -48,7 +50,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
         </span>
         <div className="text-left">
           <p className="text-lg font-extrabold leading-none text-foreground">POSTA</p>
-          <p className="text-xs text-muted-foreground">Quản trị</p>
+          <p className="text-xs text-muted-foreground">{t("admin.adminBadge")}</p>
         </div>
       </button>
 
@@ -70,7 +72,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
             }
           >
             <item.icon className="size-4" />
-            {item.label}
+            {t(item.labelKey)}
           </NavLink>
         ))}
       </nav>
@@ -82,28 +84,28 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
           className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground cursor-pointer"
         >
           {theme === "light" ? <Moon className="size-4" /> : <Sun className="size-4" />}
-          {theme === "light" ? "Chế độ tối" : "Chế độ sáng"}
+          {theme === "light" ? t("admin.darkMode") : t("admin.lightMode")}
         </button>
         <button
           onClick={() => navigate("/")}
           className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground cursor-pointer"
         >
           <Home className="size-4" />
-          Về trang chủ
+          {t("admin.backToHome")}
         </button>
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive cursor-pointer"
         >
           <LogOut className="size-4" />
-          Đăng xuất
+          {t("admin.logout")}
         </button>
         <div className="mt-2 flex items-center gap-2 border-t border-border px-2 pt-3">
           <span className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary ring-1 ring-primary/20">
             {((user as any)?.name || "A").trim().charAt(0).toUpperCase()}
           </span>
           <span className="truncate text-sm font-medium text-foreground">
-            {(user as any)?.name || "Quản trị viên"}
+            {(user as any)?.name || t("admin.adminUser")}
           </span>
         </div>
       </div>
@@ -127,7 +129,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
             <button
               onClick={() => setMobileOpen(false)}
               className="absolute right-3 top-4 rounded-md p-1 text-muted-foreground hover:bg-secondary cursor-pointer"
-              aria-label="Đóng menu"
+              aria-label={t("admin.closeMenu")}
             >
               <X className="size-5" />
             </button>
@@ -143,11 +145,11 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
           <button
             onClick={() => setMobileOpen(true)}
             className="rounded-md p-1.5 text-foreground hover:bg-secondary cursor-pointer"
-            aria-label="Mở menu"
+            aria-label={t("admin.openMenu")}
           >
             <Menu className="size-5" />
           </button>
-          <span className="font-extrabold text-foreground">POSTA Quản trị</span>
+          <span className="font-extrabold text-foreground">{t("admin.postaAdmin")}</span>
         </header>
 
         <main className="min-w-0 flex-1">{children}</main>
