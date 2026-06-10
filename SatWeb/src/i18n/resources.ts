@@ -295,8 +295,8 @@ export const resources = {
         actionAddSiteDesc: "Kết nối thêm site WordPress mới",
         actionManageSiteTitle: "Quản lý website",
         actionManageSiteDesc: "Xem & chỉnh sửa các vệ tinh",
-        actionAppPasswordTitle: "Hướng dẫn lấy mật khẩu",
-        actionAppPasswordDesc: "Tạo Application Password WordPress",
+        actionAppPasswordTitle: "Hướng dẫn sử dụng",
+        actionAppPasswordDesc: "Hướng dẫn chi tiết từ A đến Z",
         tvcBadge: "TVC giới thiệu",
         tvcTitle: "Câu chuyện thương hiệu POSTA",
         tvcDescription: "Khám phá cách POSTA giúp bạn nhân bản nội dung và phủ sóng hàng loạt website vệ tinh chỉ trong một lần đăng.",
@@ -528,6 +528,107 @@ export const resources = {
         step4: "Nhập tên mô tả (ví dụ: <i>Admin API for uploader</i>) rồi bấm <b>Add New Application Password</b>.",
         step5: "WordPress sẽ hiển thị một mật khẩu gồm 24 ký tự (thường có dấu cách). <b>Copy</b> mật khẩu này ngay — bạn sẽ không thấy lại toàn bộ sau khi đóng.",
         step6: "Lưu mật khẩu ở nơi an toàn (password manager) hoặc dán vào cấu hình server của bạn.",
+      },
+      manual: {
+        pageTitle: "Hướng dẫn sử dụng <accent>POSTA</accent>",
+        pageSubtitle:
+          "Từ kết nối website đến đăng bài hàng loạt bằng AI — hướng dẫn chi tiết từng bước.",
+        tocTitle: "Mục lục",
+        screenshotHint: "Ảnh minh họa",
+        backToTop: "Về đầu trang",
+        toc: {
+          overview: "Tổng quan: POSTA hoạt động thế nào?",
+          appPassword: "Bước 1 — Lấy Application Password trên WordPress",
+          addSite: "Bước 2 — Thêm website vệ tinh vào POSTA",
+          writePost: "Bước 3 — Soạn bài viết",
+          useAi: "Bước 4 — Dùng AI chấm điểm & tối ưu SEO",
+          publish: "Bước 5 — Đăng bài & theo dõi tiến độ",
+          tips: "Mẹo & lưu ý",
+        },
+        overviewTitle: "Tổng quan: POSTA hoạt động thế nào?",
+        overviewBody:
+          "POSTA giúp bạn <b>soạn bài một lần</b> rồi tự động đăng đồng loạt lên nhiều website WordPress vệ tinh. Mỗi site được AI viết lại nội dung để tránh trùng lặp (tốt cho SEO). Quy trình gồm 5 bước:",
+        overviewFlow: [
+          "Tạo Application Password trên từng website WordPress của bạn.",
+          "Thêm các website đó vào POSTA (URL + username + application password).",
+          "Soạn bài viết: tiêu đề, nội dung, ảnh.",
+          "Dùng AI chấm điểm SEO và tối ưu nội dung.",
+          "Đăng bài — POSTA tự đẩy lên mọi site đang hoạt động và báo tiến độ.",
+        ],
+        overviewShot:
+          "Chụp màn hình Bảng điều khiển (Dashboard) với các thẻ thống kê và nút Tạo bài viết / Quản lý website.",
+        s1Title: "Bước 1 — Lấy Application Password trên WordPress",
+        s1Intro:
+          "Application Password là mật khẩu riêng để POSTA kết nối tới WordPress qua REST API mà không cần mật khẩu chính. WordPress chỉ hiện <b>một lần duy nhất</b> — phải copy ngay.",
+        s1Steps: [
+          "Đăng nhập trang quản trị WordPress (wp-admin) bằng tài khoản quyền Administrator.",
+          "Vào <b>Users &gt; Profile</b> (Người dùng &gt; Hồ sơ).",
+          "Kéo xuống mục <b>Application Passwords</b>.",
+          "Nhập tên mô tả (ví dụ: <i>POSTA</i>) rồi bấm <b>Add New Application Password</b>.",
+          "WordPress hiện mật khẩu 24 ký tự (có dấu cách). <b>Copy ngay</b> — đóng đi là không xem lại được.",
+          "Lưu mật khẩu này lại để dùng ở Bước 2.",
+        ],
+        s1Shot:
+          "Chụp màn hình trang Users > Profile của WordPress, phần Application Passwords sau khi tạo (mật khẩu 24 ký tự đang hiển thị).",
+        s1Note:
+          "Mỗi website vệ tinh cần một Application Password riêng. Username chính là tên đăng nhập WordPress của site đó.",
+        s2Title: "Bước 2 — Thêm website vệ tinh vào POSTA",
+        s2Intro:
+          "Sau khi có Application Password, thêm website vào POSTA để hệ thống biết nơi đăng bài.",
+        s2Steps: [
+          "Từ Dashboard, bấm <b>Quản lý website</b> (hoặc menu bên trái → Website vệ tinh).",
+          "Bấm nút <b>Thêm website</b>.",
+          "Điền <b>URL</b> website (ví dụ: https://site-cua-ban.com), <b>Username</b> WordPress và <b>Application Password</b> vừa copy.",
+          "Bấm <b>Lưu</b>. Website sẽ ở trạng thái <b>Đang hoạt động (ACTIVE)</b> và sẵn sàng nhận bài.",
+        ],
+        s2Shot:
+          "Chụp màn hình form Thêm website với các ô URL, Username, Application Password.",
+        s2Note:
+          "Có thể thêm nhiều website. Khi xóa, website chuyển sang INACTIVE (ẩn) và bị bỏ qua khi đăng bài — không mất dữ liệu.",
+        s3Title: "Bước 3 — Soạn bài viết",
+        s3Intro: "Soạn nội dung một lần, dùng chung cho tất cả website.",
+        s3Steps: [
+          "Từ Dashboard bấm <b>Tạo bài viết</b>.",
+          "Nhập <b>Tiêu đề</b> (tối đa 100 ký tự).",
+          "Soạn <b>Nội dung</b> trong trình soạn thảo: định dạng chữ, danh sách, bảng, chèn link.",
+          "Chèn ảnh bằng nút ảnh trên thanh công cụ — ảnh được tải lên server của POSTA và dùng chung cho mọi site.",
+        ],
+        s3Shot:
+          "Chụp màn hình trang Tạo bài viết: ô Tiêu đề và trình soạn thảo nội dung kèm thanh công cụ.",
+        s3Note: "",
+        s4Title: "Bước 4 — Dùng AI chấm điểm & tối ưu SEO",
+        s4Intro:
+          "POSTA tích hợp AI để chấm điểm SEO và viết lại nội dung cho chuẩn SEO trước khi đăng.",
+        s4Steps: [
+          "Ở mục <b>Từ khóa SEO</b>, nhập từ khóa chính. Để trống thì AI <b>tự nhận diện</b> từ khóa giúp bạn.",
+          "Bấm <b>Chấm điểm SEO</b>. AI phân tích và trả về điểm /100 cùng danh sách tiêu chí đạt/chưa đạt và gợi ý.",
+          "Xem bảng kết quả bên dưới. Muốn cải thiện thì bấm <b>Tối ưu bằng AI</b> — AI viết lại nội dung (và tiêu đề) bám sát từ khóa rồi ghi đè vào trình soạn thảo.",
+          "AI tự chấm lại để bạn thấy điểm mới ngay.",
+        ],
+        s4Shot:
+          "Chụp màn hình bảng kết quả SEO: điểm số, các tiêu chí (đạt/chưa đạt) và nút Tối ưu bằng AI.",
+        s4Note:
+          "Có thể chấm và tối ưu nhiều lần đến khi hài lòng. Mỗi lần tối ưu sẽ thay nội dung hiện tại — copy lại bản gốc nếu cần giữ.",
+        s5Title: "Bước 5 — Đăng bài & theo dõi tiến độ",
+        s5Intro:
+          "Khi nội dung đã ổn, đăng bài để POSTA gửi lên tất cả website đang hoạt động.",
+        s5Steps: [
+          "Bấm <b>Chấm điểm & chuẩn bị đăng</b> để mở bảng SEO (nếu chưa mở).",
+          "Bấm <b>Đăng bài ngay</b>. POSTA đẩy bài lên từng website ACTIVE theo hàng đợi.",
+          "Từ website thứ hai trở đi, AI <b>viết lại nội dung</b> cho khác biệt để tránh trùng lặp giữa các site.",
+          "Trang <b>Tiến độ</b> hiển thị site nào đăng thành công, site nào lỗi để bạn kiểm tra lại.",
+        ],
+        s5Shot:
+          "Chụp màn hình trang Tiến độ: danh sách website với trạng thái thành công/thất bại của từng site.",
+        s5Note:
+          "Website INACTIVE sẽ bị bỏ qua. Site lỗi thường do sai Application Password hoặc URL — kiểm tra lại ở Bước 2.",
+        tipsTitle: "Mẹo & lưu ý",
+        tips: [
+          "Bảo mật: Application Password tương đương quyền đăng bài — đừng chia sẻ công khai. Có thể thu hồi trong WordPress bất cứ lúc nào.",
+          "Mỗi website cần URL chính xác kèm https:// và đúng username WordPress.",
+          "Nên đạt điểm SEO ≥ 70 trước khi đăng để nội dung chuẩn hơn.",
+          "Ảnh nên có kích thước hợp lý để tải nhanh; ảnh được dùng chung cho mọi site.",
+        ],
       },
       admin: {
         dashboardTitle: "Bảng điều khiển quản trị",
@@ -1000,8 +1101,8 @@ export const resources = {
         actionAddSiteDesc: "Connect a new WordPress site",
         actionManageSiteTitle: "Manage websites",
         actionManageSiteDesc: "View & edit satellites",
-        actionAppPasswordTitle: "Get password guide",
-        actionAppPasswordDesc: "Create a WordPress Application Password",
+        actionAppPasswordTitle: "User manual",
+        actionAppPasswordDesc: "Detailed step-by-step guide",
         tvcBadge: "Intro TVC",
         tvcTitle: "The POSTA brand story",
         tvcDescription: "Discover how POSTA helps you duplicate content and reach a wide network of satellite websites in a single publish.",
@@ -1233,6 +1334,107 @@ export const resources = {
         step4: "Enter a descriptive name (e.g. <i>Admin API for uploader</i>) then click <b>Add New Application Password</b>.",
         step5: "WordPress will display a 24-character password (usually with spaces). <b>Copy</b> it immediately — you won't be able to see the full password again after closing.",
         step6: "Store the password in a safe place (a password manager) or paste it into your server configuration.",
+      },
+      manual: {
+        pageTitle: "<accent>POSTA</accent> User Manual",
+        pageSubtitle:
+          "From connecting a website to AI-powered bulk publishing — a detailed step-by-step guide.",
+        tocTitle: "Table of contents",
+        screenshotHint: "Screenshot",
+        backToTop: "Back to top",
+        toc: {
+          overview: "Overview: how does POSTA work?",
+          appPassword: "Step 1 — Get an Application Password on WordPress",
+          addSite: "Step 2 — Add a satellite website to POSTA",
+          writePost: "Step 3 — Write a post",
+          useAi: "Step 4 — Use AI to score & optimize SEO",
+          publish: "Step 5 — Publish & track progress",
+          tips: "Tips & notes",
+        },
+        overviewTitle: "Overview: how does POSTA work?",
+        overviewBody:
+          "POSTA lets you <b>write a post once</b> and automatically publish it to many satellite WordPress websites at once. Each site gets its content rewritten by AI to avoid duplication (good for SEO). The workflow has 5 steps:",
+        overviewFlow: [
+          "Create an Application Password on each of your WordPress websites.",
+          "Add those websites to POSTA (URL + username + application password).",
+          "Write a post: title, content, images.",
+          "Use AI to score SEO and optimize the content.",
+          "Publish — POSTA fans out to every active site and reports progress.",
+        ],
+        overviewShot:
+          "Screenshot of the Dashboard with stat cards and the Create post / Manage websites buttons.",
+        s1Title: "Step 1 — Get an Application Password on WordPress",
+        s1Intro:
+          "An Application Password is a dedicated password that lets POSTA connect to WordPress via the REST API without your main password. WordPress shows it <b>only once</b> — copy it right away.",
+        s1Steps: [
+          "Sign in to the WordPress admin (wp-admin) with an Administrator account.",
+          "Go to <b>Users &gt; Profile</b>.",
+          "Scroll down to the <b>Application Passwords</b> section.",
+          "Enter a descriptive name (e.g. <i>POSTA</i>) then click <b>Add New Application Password</b>.",
+          "WordPress shows a 24-character password (with spaces). <b>Copy it now</b> — you can't view it again after closing.",
+          "Save this password to use in Step 2.",
+        ],
+        s1Shot:
+          "Screenshot of the WordPress Users > Profile page, the Application Passwords section after creation (the 24-character password is shown).",
+        s1Note:
+          "Each satellite website needs its own Application Password. The username is that site's WordPress login name.",
+        s2Title: "Step 2 — Add a satellite website to POSTA",
+        s2Intro:
+          "Once you have the Application Password, add the website to POSTA so the system knows where to publish.",
+        s2Steps: [
+          "From the Dashboard, click <b>Manage websites</b> (or the left menu → Satellite websites).",
+          "Click the <b>Add website</b> button.",
+          "Fill in the website <b>URL</b> (e.g. https://your-site.com), the WordPress <b>Username</b> and the <b>Application Password</b> you just copied.",
+          "Click <b>Save</b>. The website becomes <b>Active</b> and is ready to receive posts.",
+        ],
+        s2Shot:
+          "Screenshot of the Add website form with the URL, Username and Application Password fields.",
+        s2Note:
+          "You can add many websites. Deleting a website sets it to INACTIVE (hidden) and it is skipped when publishing — no data is lost.",
+        s3Title: "Step 3 — Write a post",
+        s3Intro: "Write the content once, shared across all websites.",
+        s3Steps: [
+          "From the Dashboard click <b>Create post</b>.",
+          "Enter a <b>Title</b> (up to 100 characters).",
+          "Write the <b>Content</b> in the editor: text formatting, lists, tables, links.",
+          "Insert images with the image button on the toolbar — images are uploaded to POSTA's server and shared across all sites.",
+        ],
+        s3Shot:
+          "Screenshot of the Create post page: the Title field and the content editor with its toolbar.",
+        s3Note: "",
+        s4Title: "Step 4 — Use AI to score & optimize SEO",
+        s4Intro:
+          "POSTA integrates AI to score SEO and rewrite the content for SEO before publishing.",
+        s4Steps: [
+          "In the <b>SEO keyword</b> field, enter the main keyword. Leave it empty and the AI <b>auto-detects</b> the keyword for you.",
+          "Click <b>Score SEO</b>. The AI analyzes and returns a score /100 with a list of passed/failed criteria and suggestions.",
+          "Review the results below. To improve, click <b>Optimize with AI</b> — the AI rewrites the content (and title) around the keyword and overwrites the editor.",
+          "The AI re-scores automatically so you see the new score right away.",
+        ],
+        s4Shot:
+          "Screenshot of the SEO results panel: the score, the criteria (passed/failed) and the Optimize with AI button.",
+        s4Note:
+          "You can score and optimize multiple times until you're happy. Each optimization replaces the current content — copy the original if you need to keep it.",
+        s5Title: "Step 5 — Publish & track progress",
+        s5Intro:
+          "Once the content looks good, publish to send it to all active websites.",
+        s5Steps: [
+          "Click <b>Score & prepare to publish</b> to open the SEO panel (if not already open).",
+          "Click <b>Publish now</b>. POSTA pushes the post to each ACTIVE website via a queue.",
+          "From the second website onward, the AI <b>rewrites the content</b> to keep it distinct and avoid duplication across sites.",
+          "The <b>Progress</b> page shows which sites published successfully and which failed so you can check them.",
+        ],
+        s5Shot:
+          "Screenshot of the Progress page: the list of websites with each site's success/failure status.",
+        s5Note:
+          "INACTIVE websites are skipped. A failed site is usually due to a wrong Application Password or URL — re-check it in Step 2.",
+        tipsTitle: "Tips & notes",
+        tips: [
+          "Security: an Application Password is equivalent to publishing rights — don't share it publicly. You can revoke it in WordPress anytime.",
+          "Each website needs an exact URL with https:// and the correct WordPress username.",
+          "Aim for an SEO score ≥ 70 before publishing for better content.",
+          "Keep images at a reasonable size for fast loading; images are shared across all sites.",
+        ],
       },
       admin: {
         dashboardTitle: "Admin Dashboard",
