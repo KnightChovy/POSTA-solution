@@ -8,6 +8,7 @@ import {
 } from "../service/authService";
 import { tokenStore } from "../lib/axiosConfig";
 import { AuthState } from "../../index";
+import useProfileStore from "./profileStore";
 export interface User {
   id: string;
   username: string;
@@ -84,6 +85,7 @@ export const useAuthStore = create<AuthState>()(
           // bỏ qua lỗi mạng khi đăng xuất
         }
         tokenStore.clear();
+        useProfileStore.getState().clearProfile();
         set({
           isAuthenticated: false,
           user: null,

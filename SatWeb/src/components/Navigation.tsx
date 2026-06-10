@@ -12,6 +12,7 @@ import {
   Sun,
   ShieldCheck,
   CreditCard,
+  Globe,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
@@ -24,7 +25,10 @@ const Navigation = () => {
   const location = useLocation();
   const { isAuthenticated, logout, user } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  const lang = i18n.language?.startsWith("en") ? "en" : "vi";
+  const changeLang = (value: string) => i18n.changeLanguage(value);
 
   const initials =
     (user as any)?.name
@@ -129,6 +133,20 @@ const Navigation = () => {
 
         {/* Theme Toggle & Auth Section */}
         <div className="flex items-center gap-3">
+          {/* Language Switcher */}
+          <div className="relative flex items-center">
+            <Globe className="pointer-events-none absolute left-2.5 size-4 text-muted-foreground" />
+            <select
+              aria-label={t("common.language")}
+              value={lang}
+              onChange={(e) => changeLang(e.target.value)}
+              className="h-9 cursor-pointer appearance-none rounded-md border border-border bg-card pl-8 pr-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="vi">Tiếng Việt</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+
           {/* Theme Toggle */}
           <Button
             variant="outline"

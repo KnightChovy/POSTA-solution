@@ -46,6 +46,7 @@ interface ProfileStore {
   saving: boolean;
   getProfile: () => Promise<void>;
   updateProfile: (data: UpdateProfileInput) => Promise<boolean>;
+  clearProfile: () => void;
 }
 
 const useProfileStore = create<ProfileStore>((set) => ({
@@ -87,6 +88,8 @@ const useProfileStore = create<ProfileStore>((set) => ({
       set({ saving: false });
     }
   },
+
+  clearProfile: () => set({ profile: null }),
 }));
 
 export default useProfileStore;

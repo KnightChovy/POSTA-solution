@@ -246,9 +246,7 @@ const PostForm = ({
       keyword: keyword.trim(),
     });
     if (result) {
-      toast.info(
-        `Đã chấm điểm SEO: ${result.score}/100. Xem đánh giá bên dưới rồi bấm "Đăng bài ngay".`,
-      );
+      toast.info(t("posts.seoScored", { score: result.score }));
     }
   };
 
@@ -501,7 +499,7 @@ const PostForm = ({
                   setKeyword("");
                   resetSeo();
                 }}>
-                Hủy
+                {t("posts.cancel")}
               </Button>
               <Button
                 disabled={uploading || evaluating || publishing}
