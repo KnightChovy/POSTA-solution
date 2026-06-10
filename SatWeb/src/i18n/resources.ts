@@ -543,6 +543,11 @@ export const resources = {
           writePost: "Bước 3 — Soạn bài viết",
           useAi: "Bước 4 — Dùng AI chấm điểm & tối ưu SEO",
           publish: "Bước 5 — Đăng bài & theo dõi tiến độ",
+          safety: "Cảnh báo an toàn dữ liệu & Pháp lý",
+          troubleshooting: "Xử lý sự cố",
+          warranty: "Thông tin bảo hành & Liên hệ",
+          maintenance: "Bảo trì & Cập nhật hệ thống",
+          disposal: "Tiêu hủy dữ liệu & Ngừng sử dụng",
           tips: "Mẹo & lưu ý",
         },
         overviewTitle: "Tổng quan: POSTA hoạt động thế nào?",
@@ -622,6 +627,60 @@ export const resources = {
           "Chụp màn hình trang Tiến độ: danh sách website với trạng thái thành công/thất bại của từng site.",
         s5Note:
           "Website INACTIVE sẽ bị bỏ qua. Site lỗi thường do sai Application Password hoặc URL — kiểm tra lại ở Bước 2.",
+        safetyTitle: "Cảnh báo an toàn dữ liệu & Pháp lý",
+        safetyIntro:
+          "Đọc kỹ trước khi dùng để bảo vệ dữ liệu và tránh rủi ro pháp lý.",
+        safetyPoints: [
+          "Bảo mật <b>Application Password</b>: không chia sẻ, không đưa vào mã nguồn công khai, không gửi qua kênh không an toàn. Nếu bị lộ, thu hồi ngay trong WordPress.",
+          "Chỉ kết nối tới website do <b>bạn sở hữu hoặc được ủy quyền</b>. Không đăng lên site của người khác khi chưa được phép.",
+          "Chịu trách nhiệm với nội dung đăng: không vi phạm bản quyền, không đăng nội dung sai sự thật, lừa đảo hoặc bị pháp luật cấm.",
+          "Tránh spam: đăng hàng loạt quá mức có thể khiến site bị Google phạt SEO hoặc bị nhà cung cấp hosting khóa.",
+          "Nội dung do AI tạo cần được <b>kiểm tra lại</b> trước khi xuất bản — AI có thể đưa thông tin sai.",
+        ],
+        safetyNote:
+          "POSTA là công cụ hỗ trợ; mọi rủi ro pháp lý phát sinh từ nội dung và website thuộc trách nhiệm của người dùng.",
+        troubleshootingTitle: "Xử lý sự cố",
+        troubleshootingIntro: "Các lỗi thường gặp và cách khắc phục nhanh.",
+        troubleshootingPoints: [
+          "<b>Không đăng nhập được:</b> kiểm tra đúng email/mật khẩu và tài khoản đã xác thực email chưa; thử đặt lại mật khẩu.",
+          "<b>Đăng lên site báo lỗi:</b> thường do sai Application Password hoặc URL — kiểm tra lại ở Bước 2; đảm bảo URL có https:// và REST API của WordPress đang bật.",
+          "<b>Ảnh không hiển thị trên bài:</b> ảnh quá nặng hoặc tải lên lỗi — thử lại với ảnh nhỏ hơn.",
+          "<b>AI chấm điểm/tối ưu không chạy:</b> nội dung quá ngắn hoặc mạng chậm — nhập đủ nội dung rồi thử lại sau ít phút.",
+          "<b>Trang trắng / mất phiên đăng nhập:</b> phiên hết hạn — đăng nhập lại.",
+        ],
+        troubleshootingNote:
+          "Vẫn còn lỗi? Chụp màn hình thông báo lỗi và liên hệ hỗ trợ (xem mục Bảo hành & Liên hệ).",
+        warrantyTitle: "Thông tin bảo hành & Liên hệ",
+        warrantyIntro:
+          "Hỗ trợ kỹ thuật và tiếp nhận phản hồi trong thời gian sử dụng dịch vụ.",
+        warrantyPoints: [
+          "Hỗ trợ kỹ thuật trong suốt thời gian gói dịch vụ còn hiệu lực.",
+          "Email hỗ trợ: <b>support@posta.vn</b>",
+          "Thời gian phản hồi: trong giờ làm việc (Thứ 2 – Thứ 6, 9:00 – 18:00).",
+          "Khi liên hệ, cung cấp: tài khoản, mô tả lỗi và ảnh chụp màn hình để được hỗ trợ nhanh hơn.",
+        ],
+        warrantyNote: "",
+        maintenanceTitle: "Bảo trì & Cập nhật hệ thống",
+        maintenanceIntro:
+          "Giữ hệ thống và các website vệ tinh hoạt động ổn định.",
+        maintenancePoints: [
+          "POSTA được cập nhật định kỳ; tính năng mới tự áp dụng, bạn không cần cài đặt lại.",
+          "Định kỳ kiểm tra danh sách website vệ tinh, gỡ bỏ site không còn dùng (chuyển INACTIVE).",
+          "Cập nhật lại Application Password nếu bạn đổi mật khẩu WordPress hoặc thu hồi key cũ.",
+          "Giữ WordPress của các site vệ tinh được cập nhật để REST API hoạt động đúng.",
+          "Trong thời gian bảo trì hệ thống, một số chức năng có thể tạm gián đoạn — sẽ được thông báo trước.",
+        ],
+        maintenanceNote: "",
+        disposalTitle: "Tiêu hủy dữ liệu & Ngừng sử dụng",
+        disposalIntro:
+          "Cách xóa dữ liệu và ngừng dịch vụ an toàn khi không còn sử dụng.",
+        disposalPoints: [
+          "Gỡ website vệ tinh: vào Quản lý website và xóa — site chuyển INACTIVE và ngừng nhận bài.",
+          "Thu hồi quyền truy cập: xóa Application Password tương ứng trong WordPress để POSTA không còn kết nối được.",
+          "Xóa dữ liệu tài khoản: liên hệ hỗ trợ để yêu cầu xóa tài khoản và dữ liệu liên quan.",
+          "Bài đã đăng nằm trên WordPress của bạn — xóa trực tiếp trong wp-admin nếu cần gỡ bỏ.",
+        ],
+        disposalNote: "",
         tipsTitle: "Mẹo & lưu ý",
         tips: [
           "Bảo mật: Application Password tương đương quyền đăng bài — đừng chia sẻ công khai. Có thể thu hồi trong WordPress bất cứ lúc nào.",
@@ -1349,6 +1408,11 @@ export const resources = {
           writePost: "Step 3 — Write a post",
           useAi: "Step 4 — Use AI to score & optimize SEO",
           publish: "Step 5 — Publish & track progress",
+          safety: "Data safety & legal warnings",
+          troubleshooting: "Troubleshooting",
+          warranty: "Warranty & contact",
+          maintenance: "Maintenance & updates",
+          disposal: "Data disposal & decommissioning",
           tips: "Tips & notes",
         },
         overviewTitle: "Overview: how does POSTA work?",
@@ -1428,6 +1492,60 @@ export const resources = {
           "Screenshot of the Progress page: the list of websites with each site's success/failure status.",
         s5Note:
           "INACTIVE websites are skipped. A failed site is usually due to a wrong Application Password or URL — re-check it in Step 2.",
+        safetyTitle: "Data safety & legal warnings",
+        safetyIntro:
+          "Read carefully before use to protect your data and avoid legal risks.",
+        safetyPoints: [
+          "Keep your <b>Application Password</b> safe: don't share it, don't put it in public source code, don't send it over insecure channels. If leaked, revoke it immediately in WordPress.",
+          "Only connect to websites you <b>own or are authorized</b> to manage. Don't publish to someone else's site without permission.",
+          "You are responsible for the content you publish: no copyright infringement, no false or fraudulent content, nothing prohibited by law.",
+          "Avoid spam: excessive bulk publishing can get your site penalized by Google SEO or suspended by your hosting provider.",
+          "AI-generated content must be <b>reviewed</b> before publishing — AI can produce inaccurate information.",
+        ],
+        safetyNote:
+          "POSTA is an assistive tool; any legal risk arising from your content and websites is the user's responsibility.",
+        troubleshootingTitle: "Troubleshooting",
+        troubleshootingIntro: "Common problems and quick fixes.",
+        troubleshootingPoints: [
+          "<b>Can't sign in:</b> check the email/password are correct and the account's email is verified; try resetting the password.",
+          "<b>A site fails when publishing:</b> usually a wrong Application Password or URL — re-check it in Step 2; make sure the URL has https:// and the WordPress REST API is enabled.",
+          "<b>Images don't show in the post:</b> the image is too large or failed to upload — try again with a smaller image.",
+          "<b>AI scoring/optimization won't run:</b> the content is too short or the network is slow — add enough content and retry in a few minutes.",
+          "<b>Blank page / lost session:</b> the session expired — sign in again.",
+        ],
+        troubleshootingNote:
+          "Still stuck? Take a screenshot of the error message and contact support (see Warranty & contact).",
+        warrantyTitle: "Warranty & contact",
+        warrantyIntro:
+          "Technical support and feedback during your subscription period.",
+        warrantyPoints: [
+          "Technical support throughout the active period of your service plan.",
+          "Support email: <b>support@posta.vn</b>",
+          "Response time: during business hours (Mon–Fri, 9:00–18:00).",
+          "When contacting us, include: your account, a description of the issue and a screenshot for faster support.",
+        ],
+        warrantyNote: "",
+        maintenanceTitle: "Maintenance & updates",
+        maintenanceIntro:
+          "Keep the system and your satellite websites running smoothly.",
+        maintenancePoints: [
+          "POSTA is updated regularly; new features apply automatically — no reinstall needed.",
+          "Periodically review your satellite website list and remove sites you no longer use (set to INACTIVE).",
+          "Update the Application Password if you change your WordPress password or revoke the old key.",
+          "Keep your satellite sites' WordPress up to date so the REST API works correctly.",
+          "During system maintenance, some features may be temporarily unavailable — you'll be notified in advance.",
+        ],
+        maintenanceNote: "",
+        disposalTitle: "Data disposal & decommissioning",
+        disposalIntro:
+          "How to delete your data and stop the service safely when no longer needed.",
+        disposalPoints: [
+          "Remove a satellite website: go to Manage websites and delete it — the site becomes INACTIVE and stops receiving posts.",
+          "Revoke access: delete the corresponding Application Password in WordPress so POSTA can no longer connect.",
+          "Delete account data: contact support to request deletion of your account and related data.",
+          "Published posts live on your own WordPress — delete them directly in wp-admin if you need to remove them.",
+        ],
+        disposalNote: "",
         tipsTitle: "Tips & notes",
         tips: [
           "Security: an Application Password is equivalent to publishing rights — don't share it publicly. You can revoke it in WordPress anytime.",
