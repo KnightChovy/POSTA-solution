@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Satellite = require("../models/Satellite");
 const Post = require("../models/Post");
 const Category = require("../models/Category");
@@ -59,10 +60,17 @@ const addSatellite = async (req, res) => {
   }
 };
 
-// DONE: Get number of published posts across all satellites
+// Stage $match lọc theo chủ sở hữu — admin xem toàn hệ thống, user chỉ bài của mình.
+function ownerMatchStage(req) {
+  if (req.user?.isAdmin) return [];
+  return [{ $match: { owner: new mongoose.Types.ObjectId(req.user.id) } }];
+}
+
+// DONE: Get number of published posts (admin: toàn bộ; user: của riêng họ)
 const getNumberOfPublishedPosts = async (req, res) => {
   try {
     const result = await Post.aggregate([
+      ...ownerMatchStage(req),
       {
         $unwind: '$postedSatellite'
       },
@@ -83,10 +91,11 @@ const getNumberOfPublishedPosts = async (req, res) => {
   }
 }
 
-// DONE: Get number of error posts across all satellites
+// DONE: Get number of error posts (admin: toàn bộ; user: của riêng họ)
 const getNumberOfErrorPosts = async (req, res) => {
   try {
     const result = await Post.aggregate([
+      ...ownerMatchStage(req),
       {
         $unwind: '$errorSatellite'
       },
@@ -107,10 +116,11 @@ const getNumberOfErrorPosts = async (req, res) => {
   }
 }
 
-// DONE: Get overall progress of all posts
+// DONE: Get overall progress (admin: toàn bộ; user: của riêng họ)
 const getOverallProgress = async (req, res) => {
   try {
-    const posts = await Post.find({ successfulRate: { $ne: 0 } });
+    const ownerFilter = req.user?.isAdmin ? {} : { owner: req.user.id };
+    const posts = await Post.find({ ...ownerFilter, successfulRate: { $ne: 0 } });
     const total = posts.reduce((sum, p) => sum + p.successfulRate, 0);
     const average = total / posts.length;
     if (isNaN(average)) {
