@@ -15,6 +15,8 @@ import {
   Play,
   PlayCircle,
   Maximize2,
+  Award,
+  ExternalLink,
 } from "lucide-react";
 import {
   Accordion,
@@ -54,6 +56,40 @@ const TRENDING = [
   { seed: "education", posts: "480", sites: "120" },
 ];
 
+// POST a STAR — mỗi bài có ảnh bìa + thư viện ảnh trong public/achievements/.
+// Tiêu đề/mô tả/nội dung chi tiết lấy từ i18n theo `seed` (captions khớp theo thứ tự gallery).
+const ACHIEVEMENTS = [
+  {
+    seed: "experienceDay",
+    gallery: [
+      "/achievements/experience-day-1.jpg",
+      "/achievements/experience-day-2.jpg",
+      "/achievements/experience-day-3.jpg",
+      "/achievements/experience-day-4.jpg",
+    ],
+  },
+  {
+    seed: "top30",
+    gallery: [
+      "/achievements/top-30-1.png",
+      "/achievements/top-30-2.png",
+      "/achievements/top-30-3.png",
+      "/achievements/top-30-4.png",
+    ],
+  },
+  {
+    seed: "seminar",
+    gallery: ["/achievements/hoi-thao-phu-huynh.png"],
+  },
+];
+
+type AchievementDetail = {
+  heading: string;
+  body: { heading?: string; text: string }[];
+  captions: string[];
+  link?: { label: string; url: string };
+};
+
 const REASONS = [
   { key: "bulk", icon: Rocket },
   { key: "ai", icon: Bot },
@@ -68,6 +104,7 @@ const Landing = () => {
   const { isAuthenticated, user } = useAuthStore();
   const [email, setEmail] = useState("");
   const [videoOpen, setVideoOpen] = useState(false);
+  const [openAchievement, setOpenAchievement] = useState<string | null>(null);
 
   const lang = i18n.language?.startsWith("en") ? "en" : "vi";
   const changeLang = (value: string) => i18n.changeLanguage(value);
@@ -261,7 +298,7 @@ const Landing = () => {
           aria-hidden="true"
           className="pointer-events-none absolute left-1/2 top-0 h-72 w-[44rem] max-w-full -translate-x-1/2 rounded-full bg-orange-500/20 blur-3xl"
         />
-        <div className="relative mx-auto max-w-5xl px-4 py-20 text-center sm:px-6">
+        <div className="relative mx-auto max-w-7xl px-4 py-20 text-center sm:px-6 lg:px-8">
           <span className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1 text-xs font-semibold text-orange-600 dark:text-orange-400">
             <Play className="size-3 fill-current" />
             {t("dashboard.tvcBadge")}
@@ -320,52 +357,59 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* ===== CHỦ ĐỀ THỊNH HÀNH ===== */}
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <h2 className="mb-6 text-2xl font-bold tracking-tight text-foreground">
-          {t("landing.trendingTitle")}
-        </h2>
-        <Carousel opts={{ align: "start", dragFree: true }} className="w-full">
-          <CarouselContent className="-ml-4">
-            {TRENDING.map((item, i) => (
-              <CarouselItem
+            {/* ===== THÀNH TỰU ===== */}
+      <section
+        id="achievements"
+        className="scroll-mt-20 border-t border-primary/10 bg-background"
+      >
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
+              <Award className="size-3.5" />
+              {t("landing.achievementsBadge")}
+            </span>
+            <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+              {t("landing.achievementsTitle")}{" "}
+              <span className="text-primary">{t("landing.achievementsAccent")}</span>
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
+              {t("landing.achievementsSub")}
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {ACHIEVEMENTS.map((item) => (
+              <article
                 key={item.seed}
-                className="basis-1/2 pl-4 sm:basis-1/3 md:basis-1/4 lg:basis-1/5"
+                className="group flex h-full flex-col overflow-hidden rounded-2xl border border-primary/15 bg-card shadow-sm transition-colors duration-200 hover:border-primary/40"
               >
-                <Link
-                  to={`/topics/${item.seed}`}
-                  className="group block h-full w-full cursor-pointer text-left focus-visible:outline-none"
-                >
-                  <div className="relative aspect-[3/4] overflow-hidden rounded-xl border border-primary/15 shadow-sm transition-colors duration-200 group-hover:border-primary/40 group-focus-visible:ring-2 group-focus-visible:ring-primary">
-                    <img
-                      src={`https://picsum.photos/seed/posta-${item.seed}/300/400`}
-                      alt={t(`landing.trending.${item.seed}.title`)}
-                      loading="lazy"
-                      className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <span className="absolute left-2 top-2 flex size-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground shadow-md">
-                      {i + 1}
-                    </span>
-                    {/* Lớp phủ + nội dung mô tả ngay trên ảnh */}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent p-3 pt-8">
-                      <p className="line-clamp-3 text-xs leading-relaxed text-white/90">
-                        {t(`landing.trending.${item.seed}.desc`)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-2 flex items-center gap-1">
-                    <p className="truncate text-sm font-semibold text-foreground group-hover:text-primary">
-                      {t(`landing.trending.${item.seed}.title`)}
-                    </p>
-                    <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-primary" />
-                  </div>
-                </Link>
-              </CarouselItem>
+                <div className="aspect-[4/3] overflow-hidden bg-accent/40">
+                  <img
+                    src={item.gallery[0]}
+                    alt={t(`landing.achievements.${item.seed}.title`)}
+                    loading="lazy"
+                    className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                </div>
+                <div className="flex flex-1 flex-col p-5">
+                  <h3 className="text-base font-bold text-foreground">
+                    {t(`landing.achievements.${item.seed}.title`)}
+                  </h3>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+                    {t(`landing.achievements.${item.seed}.desc`)}
+                  </p>
+                  <button
+                    onClick={() => setOpenAchievement(item.seed)}
+                    className="mt-4 inline-flex w-fit items-center gap-1 text-sm font-semibold text-primary cursor-pointer hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
+                  >
+                    {t("landing.achievementsDetailCta")}
+                    <ChevronRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                  </button>
+                </div>
+              </article>
             ))}
-          </CarouselContent>
-          <CarouselPrevious className="hidden sm:flex" />
-          <CarouselNext className="hidden sm:flex" />
-        </Carousel>
+          </div>
+        </div>
       </section>
 
       {/* ===== LÝ DO CHỌN POSTA ===== */}
@@ -395,15 +439,108 @@ const Landing = () => {
                 </div>
               </div>
             ))}
+
+     
           </div>
+
         </div>
       </section>
+ 
+
+      {/* Modal chi tiết bài POST a STAR */}
+      <Dialog
+        open={openAchievement !== null}
+        onOpenChange={(open) => !open && setOpenAchievement(null)}
+      >
+        <DialogContent className="max-h-[90vh] w-[96vw] max-w-3xl overflow-y-auto p-0">
+          {openAchievement &&
+            (() => {
+              const item = ACHIEVEMENTS.find((a) => a.seed === openAchievement)!;
+              const detail = t(`landing.achievements.${item.seed}.detail`, {
+                returnObjects: true,
+              }) as AchievementDetail;
+              return (
+                <article>
+                  <div className="aspect-[16/9] w-full overflow-hidden bg-accent/40">
+                    <img
+                      src={item.gallery[0]}
+                      alt={detail.heading}
+                      className="size-full object-cover"
+                    />
+                  </div>
+                  <div className="p-6 sm:p-8">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
+                      <Award className="size-3.5" />
+                      {t("landing.achievementsBadge")}
+                    </span>
+                    <DialogTitle className="mt-3 text-xl font-extrabold leading-snug text-foreground sm:text-2xl">
+                      {detail.heading}
+                    </DialogTitle>
+
+                    <div className="mt-5 flex flex-col gap-4">
+                      {detail.body.map((block, i) => (
+                        <div key={i}>
+                          {block.heading && (
+                            <h4 className="mb-1 text-base font-bold text-foreground">
+                              {block.heading}
+                            </h4>
+                          )}
+                          <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+                            {block.text}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {item.gallery.length > 1 && (
+                      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                        {item.gallery.map((src, i) => (
+                          <figure key={src} className="flex flex-col gap-2">
+                            <div className="overflow-hidden rounded-xl border border-primary/15 bg-accent/40">
+                              <img
+                                src={src}
+                                alt={detail.captions[i] ?? detail.heading}
+                                loading="lazy"
+                                className="aspect-[4/3] size-full object-cover"
+                              />
+                            </div>
+                            {detail.captions[i] && (
+                              <figcaption className="text-xs italic leading-relaxed text-muted-foreground">
+                                {detail.captions[i]}
+                              </figcaption>
+                            )}
+                          </figure>
+                        ))}
+                      </div>
+                    )}
+
+                    {detail.link && (
+                      <a
+                        href={detail.link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(
+                          "mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-primary px-5 text-sm font-bold text-primary-foreground cursor-pointer shadow-sm",
+                          CTA_MOTION
+                        )}
+                      >
+                        <ExternalLink className="size-4" />
+                        {detail.link.label}
+                      </a>
+                    )}
+                  </div>
+                </article>
+              );
+            })()}
+        </DialogContent>
+      </Dialog>
 
       {/* ===== BẢNG GIÁ ===== */}
       <PricingSection />
 
       {/* ===== FAQ ===== */}
-      <section className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl">
         <h2 className="mb-8 text-center text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
           {t("landing.faqTitle")}
         </h2>
@@ -427,6 +564,7 @@ const Landing = () => {
         <div className="mt-12 text-center">
           <p className="mb-5 text-base text-muted-foreground">{t("landing.heroSub")}</p>
           <EmailCapture onLight />
+        </div>
         </div>
       </section>
 
