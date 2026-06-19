@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
+  PenLine,
   SquarePlus,
   FolderKanban,
   LogOut,
@@ -50,6 +51,12 @@ const Navigation = () => {
       path: "/dashboard",
       icon: <LayoutDashboard className="h-4 w-4" />,
       action: () => navigate("/dashboard"),
+    },
+    {
+      name: t("nav.createPost"),
+      path: "/create-post",
+      icon: <PenLine className="h-4 w-4" />,
+      action: () => navigate("/create-post"),
     },
     {
       name: t("nav.addSatellite"),
@@ -116,7 +123,7 @@ const Navigation = () => {
                 key={item.path}
                 onClick={item.action}
                 className={cn(
-                  "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200",
+                  "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap shrink-0 transition-all duration-200",
                   isActive
                     ? "bg-primary/10 text-primary shadow-sm"
                     : "text-muted-foreground hover:bg-secondary hover:text-foreground"
