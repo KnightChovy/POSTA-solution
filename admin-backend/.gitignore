@@ -5,3 +5,6 @@ logs/
 .env.*
 src/uploads/posts/*
 !src/uploads/posts/.gitkeep
+
+# WordPress test local (docker) — không commit/deploy
+testpage/
