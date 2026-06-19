@@ -81,7 +81,7 @@ export default function AdminRevenue() {
       {stats && (
         <div className="mb-6 rounded-xl border border-primary/15 bg-card p-6 shadow-sm">
           <h2 className="mb-5 text-base font-bold text-foreground">{t("admin.revenueLast6Months")}</h2>
-          <div className="flex h-44 items-end justify-between gap-3">
+          <div className="flex h-44 items-stretch justify-between gap-3">
             {stats.revenueByMonth.map((r) => (
               <div key={r.month} className="flex flex-1 flex-col items-center gap-2">
                 <div className="flex w-full flex-1 items-end">
