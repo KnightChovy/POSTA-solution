@@ -510,6 +510,7 @@ export const resources = {
       posts: {
         createTitle: "Tạo bài viết mới",
         createSubtitle: "Tạo nội dung với hình ảnh để xuất bản trên các website vệ tinh của bạn.",
+        draftRestored: "Đã khôi phục bản nháp chưa đăng",
         errTitleRequired: "Tiêu đề không được để trống",
         errTitleMax: "Tiêu đề phải ít hơn 100 ký tự",
         errContentRequired: "Nội dung không được để trống",
@@ -915,7 +916,7 @@ export const resources = {
         logout: "Đăng xuất",
         profile: "Hồ sơ cá nhân",
         account: "Tài khoản",
-        createPost: "Đăng bài",
+        createPost: "Tạo bài viết",
         progress: "Tiến trình",
         createWebsite: "Tạo website mới",
         viewWebsites: "Xem website",
@@ -1453,6 +1454,7 @@ export const resources = {
       posts: {
         createTitle: "Create new post",
         createSubtitle: "Create content with images to publish across your satellite websites.",
+        draftRestored: "Restored your unsaved draft",
         errTitleRequired: "Title cannot be empty",
         errTitleMax: "Title must be fewer than 100 characters",
         errContentRequired: "Content cannot be empty",
