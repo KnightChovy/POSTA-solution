@@ -36,6 +36,39 @@ import SeoPanel from "@/components/posts/SeoPanel";
 // secret. Muốn đổi key sạch sẽ thì set env, khỏi sửa code.
 const TINYMCE_API_KEY = "wu0wd7sscidx08qfrcp0panj4v0sx7i5174yy8ehncu8jyhm";
 
+// Lưu nháp bài đang soạn vào localStorage để lỡ thoát trang không mất nội dung.
+// ponytail: localStorage là đủ cho 1 nháp/người dùng; ghi thẳng mỗi lần đổi (không
+// debounce) vì payload nhỏ. Cần nhiều nháp/đồng bộ server thì mới nâng cấp.
+const DRAFT_KEY = "posta:post-draft";
+type Draft = { title?: string; content?: string; link?: string; keyword?: string };
+const hasDraftContent = (d: Draft) =>
+  !!(d.title?.trim() || d.content?.trim() || d.keyword?.trim());
+const readDraft = (): Draft | null => {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const d = JSON.parse(raw) as Draft;
+    return hasDraftContent(d) ? d : null;
+  } catch {
+    return null;
+  }
+};
+const saveDraft = (d: Draft) => {
+  try {
+    if (hasDraftContent(d)) localStorage.setItem(DRAFT_KEY, JSON.stringify(d));
+    else localStorage.removeItem(DRAFT_KEY);
+  } catch {
+    /* hết quota / chặn storage: bỏ qua, không chặn việc soạn bài */
+  }
+};
+const clearDraft = () => {
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+  } catch {
+    /* noop */
+  }
+};
+
 const makeSchema = (t: TFunction) =>
   z.object({
     title: z
@@ -72,6 +105,10 @@ const PostForm = ({
 }: PostFormProps) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  // Bản nháp đã lưu — chỉ khôi phục ở luồng tạo mới (không áp lên khi đang sửa bài).
+  const [savedDraft] = useState<Draft | null>(() =>
+    !isEditing && !initialValues ? readDraft() : null,
+  );
   const [showMetrics, setShowMetrics] = useState(false);
   const [uploading, setUploading] = useState(false);
   const { addPost } = postStore();
@@ -88,7 +125,7 @@ const PostForm = ({
     reset: resetSeo,
   } = useSeoStore();
   const [selectedSites, setSelectedSites] = useState<string[]>([]);
-  const [keyword, setKeyword] = useState("");
+  const [keyword, setKeyword] = useState(savedDraft?.keyword || "");
   const [publishing, setPublishing] = useState(false);
 
   const storeImgTemp = satellites.map((site) => {
@@ -142,16 +179,32 @@ const PostForm = ({
   //   runCheck();
   // }, [satellites]);
 
-  const defaultValues: FormValues = initialValues || {
-    title: "",
-    content: "",
-    link: "",
-  };
+  const defaultValues: FormValues = initialValues ||
+    (savedDraft
+      ? {
+          title: savedDraft.title || "",
+          content: savedDraft.content || "",
+          link: savedDraft.link || "",
+        }
+      : { title: "", content: "", link: "" });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(makeSchema(t)),
     defaultValues,
   });
+
+  // Báo 1 lần khi đã khôi phục nháp (nội dung đã có sẵn qua defaultValues).
+  useEffect(() => {
+    if (savedDraft) toast.info(t("posts.draftRestored"));
+  }, []);
+
+  // Tự lưu nháp mỗi khi đổi nội dung form hoặc từ khóa (chỉ ở luồng tạo mới).
+  useEffect(() => {
+    if (isEditing) return;
+    saveDraft({ ...form.getValues(), keyword });
+    const sub = form.watch((values) => saveDraft({ ...values, keyword }));
+    return () => sub.unsubscribe();
+  }, [form, keyword, isEditing]);
 
   // Đăng bài thật (fan-out lên các site vệ tinh). Chỉ chạy sau khi đã chấm SEO,
   // được gọi từ nút "Đăng bài ngay" trong SeoPanel.
@@ -226,6 +279,7 @@ const PostForm = ({
         toast.success(t("posts.createSuccess"), { autoClose: 3000 });
       }
       addPost(newPost);
+      clearDraft(); // đăng xong thì bỏ nháp đã lưu
       navigate("/progress", { state: { newPost: newPost } });
       return newPost;
     } catch (error) {
@@ -498,6 +552,7 @@ const PostForm = ({
                   form.reset();
                   setKeyword("");
                   resetSeo();
+                  clearDraft(); // người dùng chủ động hủy -> bỏ nháp
                 }}>
                 {t("posts.cancel")}
               </Button>

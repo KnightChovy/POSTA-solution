@@ -6,6 +6,10 @@ import useAdminStore from "@/store/adminStore";
 
 const vnd = (n: number) => new Intl.NumberFormat("vi-VN").format(n) + "đ";
 const monthLabel = (m: string) => `Th${Number(m.split("-")[1])}`;
+const fullMonth = (m: string) => {
+  const [y, mm] = m.split("-");
+  return `Tháng ${Number(mm)}/${y}`;
+};
 
 const STATUS_CLS: Record<string, string> = {
   paid: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
@@ -81,17 +85,20 @@ export default function AdminRevenue() {
       {stats && (
         <div className="mb-6 rounded-xl border border-primary/15 bg-card p-6 shadow-sm">
           <h2 className="mb-5 text-base font-bold text-foreground">{t("admin.revenueLast6Months")}</h2>
-          <div className="flex h-44 items-end justify-between gap-3">
+          <div className="flex h-44 items-stretch justify-between gap-3">
             {stats.revenueByMonth.map((r) => (
-              <div key={r.month} className="flex flex-1 flex-col items-center gap-2">
+              <div key={r.month} className="group relative flex flex-1 flex-col items-center gap-2">
                 <div className="flex w-full flex-1 items-end">
                   <div
-                    className="w-full rounded-t-md bg-primary/80 transition-all duration-500"
+                    className="w-full rounded-t-md bg-primary/80 transition-all duration-300 group-hover:bg-primary"
                     style={{ height: `${Math.max((r.total / maxRev) * 100, 2)}%` }}
-                    title={vnd(r.total)}
                   />
                 </div>
                 <span className="text-xs text-muted-foreground">{monthLabel(r.month)}</span>
+                <div className="pointer-events-none absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-2 whitespace-nowrap rounded-md bg-foreground px-2.5 py-1.5 text-center text-xs text-background opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+                  <span className="block font-semibold">{fullMonth(r.month)}</span>
+                  <span className="block">{vnd(r.total)}</span>
+                </div>
               </div>
             ))}
           </div>
