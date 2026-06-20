@@ -34,7 +34,8 @@ import SeoPanel from "@/components/posts/SeoPanel";
 // (vd trên Vercel/preview chưa cấu hình env) thì fallback về key hardcode dưới đây
 // để vẫn chạy được khi test. Key này được bảo vệ bằng Approved Domains, không phải
 // secret. Muốn đổi key sạch sẽ thì set env, khỏi sửa code.
-const TINYMCE_API_KEY = "wu0wd7sscidx08qfrcp0panj4v0sx7i5174yy8ehncu8jyhm";
+const TINYMCE_API_KEY =
+  import.meta.env.VITE_TINYMCE_API_KEY || "yzdrunk1a9xg4qb93yieike3kcvul1ej9ro6yvo50i1ordut";
 
 // Lưu nháp bài đang soạn vào localStorage để lỡ thoát trang không mất nội dung.
 // ponytail: localStorage là đủ cho 1 nháp/người dùng; ghi thẳng mỗi lần đổi (không
